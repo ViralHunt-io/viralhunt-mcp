@@ -1,0 +1,27 @@
+# Smithery deployment config (https://smithery.ai). Runs the published npm package over stdio,
+# taking the ViralHunt token as user-supplied config so it never lives in the repo.
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required:
+      - viralhuntApiKey
+    properties:
+      viralhuntApiKey:
+        type: string
+        title: ViralHunt API key
+        description: Your personal token (vhk_…) from viralhunt.io → Account → API Access.
+      viralhuntBaseUrl:
+        type: string
+        title: API base URL
+        description: Override the API base URL (advanced). Defaults to the production API.
+        default: https://viralhunt.io/tool/api/v1
+  commandFunction: |-
+    (config) => ({
+      command: 'node',
+      args: ['index.js'],
+      env: {
+        VIRALHUNT_API_KEY: config.viralhuntApiKey,
+        VIRALHUNT_BASE_URL: config.viralhuntBaseUrl || 'https://viralhunt.io/tool/api/v1'
+      }
+    })
