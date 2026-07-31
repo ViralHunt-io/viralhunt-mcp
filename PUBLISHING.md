@@ -19,7 +19,7 @@ Tags: `social-media, trending, scheduler, content-marketing, tiktok, instagram, 
 npm login                       # free account at npmjs.com
 npm publish --access public
 ```
-If the name `viralhunt-mcp` is taken, set `"name": "@rodvan/viralhunt-mcp"` in package.json
+If the name `viralhunt-mcp` is taken, set `"name": "@viralhunt-io/viralhunt-mcp"` in package.json
 (and update the README + this file), then publish again.
 
 Verify: `npx -y viralhunt-mcp` should start and print `viralhunt-mcp running (...)` to stderr.
@@ -33,14 +33,14 @@ Uses `server.json` (already in this repo) + the `mcp-publisher` CLI. The npm pac
 
 ```bash
 # install the publisher CLI (see modelcontextprotocol/registry for the latest install line)
-mcp-publisher login github        # authenticates the io.github.rodvan/* namespace
+mcp-publisher login github        # authenticates the io.github.viralhunt-io/* namespace
 mcp-publisher publish             # reads ./server.json
 ```
 
 ## 2. Smithery (smithery.ai)
 
 `smithery.yaml` is already in the repo. Go to **smithery.ai → Deploy/New server**, connect the
-GitHub repo `rodvan/viralhunt-mcp`, and it picks up the config schema (asks users for their
+GitHub repo `viralhunt-io/viralhunt-mcp`, and it picks up the config schema (asks users for their
 ViralHunt API key). No code changes needed.
 
 ## 3. modelcontextprotocol/servers (GitHub — community list)
@@ -48,13 +48,13 @@ ViralHunt API key). No code changes needed.
 Open a PR adding this line to the "Community Servers" section of the README (keep alphabetical):
 
 ```markdown
-- **[ViralHunt](https://github.com/rodvan/viralhunt-mcp)** - Find trending content across TikTok, Instagram, X, Facebook, Pinterest and Reddit, and schedule/publish/edit social posts.
+- **[ViralHunt](https://github.com/viralhunt-io/viralhunt-mcp)** - Find trending content across TikTok, Instagram, X, Facebook, Pinterest and Reddit, and schedule/publish/edit social posts.
 ```
 
 ## 4. mcp.so
 
 Submit at **mcp.so** (Submit button). Fields: name `viralhunt`, repo
-`https://github.com/rodvan/viralhunt-mcp`, npm `viralhunt-mcp`, description = the blurb above.
+`https://github.com/viralhunt-io/viralhunt-mcp`, npm `viralhunt-mcp`, description = the blurb above.
 
 ## 5. PulseMCP (pulsemcp.com)
 
