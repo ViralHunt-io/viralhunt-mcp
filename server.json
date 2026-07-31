@@ -1,23 +1,24 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
-  "name": "io.github.viralhunt-io/viralhunt-mcp",
-  "description": "Find trending/viral content across TikTok, Instagram, X, Facebook, Pinterest and Reddit, and schedule/publish/edit posts on your connected social accounts — via the ViralHunt.io API.",
-  "status": "active",
+  "name": "io.github.rodvan/viralhunt-mcp",
+  "description": "Find trending content and schedule posts across social networks via the ViralHunt.io API.",
   "repository": {
     "url": "https://github.com/viralhunt-io/viralhunt-mcp",
     "source": "github"
   },
-  "version": "0.1.1",
+  "version": "0.1.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "viralhunt-mcp",
-      "version": "0.1.1",
-      "transport": { "type": "stdio" },
+      "version": "0.1.2",
+      "transport": {
+        "type": "stdio"
+      },
       "environmentVariables": [
         {
           "name": "VIRALHUNT_API_KEY",
-          "description": "Your ViralHunt personal token (vhk_…) from viralhunt.io → Account → API Access.",
+          "description": "Your ViralHunt personal token (vhk_...) from viralhunt.io Account > API Access.",
           "isRequired": true,
           "isSecret": true
         },
