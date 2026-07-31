@@ -1,10 +1,10 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
-  "name": "io.github.rodvan/viralhunt-mcp",
+  "name": "io.github.viralhunt-io/viralhunt-mcp",
   "description": "Find trending/viral content across TikTok, Instagram, X, Facebook, Pinterest and Reddit, and schedule/publish/edit posts on your connected social accounts — via the ViralHunt.io API.",
   "status": "active",
   "repository": {
-    "url": "https://github.com/rodvan/viralhunt-mcp",
+    "url": "https://github.com/viralhunt-io/viralhunt-mcp",
     "source": "github"
   },
   "version": "0.1.0",
