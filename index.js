@@ -116,6 +116,30 @@ tool(server, "viralhunt_update_post",
   } })
 );
 
+// ── Content templates: browse the library ──
+tool(server, "viralhunt_list_templates",
+  "List ViralHunt content templates (layouts you fill and render yourself). Lean by design — no html/css — so use viralhunt_get_template for the one you'll actually render.",
+  {
+    category: z.string().optional().describe("image | quote | video | top3 | …"),
+    media_type: z.enum(["image", "video"]).optional().describe("Filter by what it renders to."),
+    network: z.string().optional().describe("Only templates suited to this network."),
+    project_id: z.number().int().optional().describe("With assigned=true, the project whose allowed templates you want."),
+    assigned: z.boolean().optional().describe("true = only the templates assigned to project_id."),
+    q: z.string().optional().describe("Search name/description."),
+  },
+  (a) => vh("/templates.php", { query: { category: a.category, media_type: a.media_type, network: a.network, q: a.q, assigned: a.assigned ? 1 : undefined, project_id: a.project_id } })
+);
+
+// ── Content templates: the full layout to render ──
+tool(server, "viralhunt_get_template",
+  "Get one template's full spec: html, css, the variable manifest (with hard rules per variable), formats, palette tokens, embedded fonts and render_tech. Fill every {{variable}}, then render with headless Chrome at the chosen format's size and WAIT for [data-vh-ready='1'] before screenshotting .vh-card.",
+  {
+    slug: z.string().optional().describe("Template slug, e.g. vh-image-card."),
+    id: z.number().int().optional().describe("Template id — alternative to slug."),
+  },
+  (a) => vh("/templates.php", { query: { slug: a.slug, id: a.id } })
+);
+
 // ── Cancel a scheduled post ──
 tool(server, "viralhunt_cancel_post",
   "Cancel the not-yet-published targets of a scheduled post. If everything already published you'll get a 409 — delete it from the platform instead.",
