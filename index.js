@@ -140,6 +140,17 @@ tool(server, "viralhunt_get_template",
   (a) => vh("/templates.php", { query: { slug: a.slug, id: a.id } })
 );
 
+// ── Content templates: wire one to a brand ──
+tool(server, "viralhunt_assign_template",
+  "Assign (or unassign) a content template to a project, so that project's agents see it via viralhunt_list_templates with assigned=true. Owner/admin only.",
+  {
+    project_id: z.number().int().describe("Project id (from viralhunt_targets)."),
+    template_id: z.number().int().describe("Template id (from viralhunt_list_templates)."),
+    action: z.enum(["add", "remove"]).optional().describe("add (default) or remove."),
+  },
+  (a) => vh("/template-assignments.php", { method: "POST", body: { project_id: a.project_id, template_id: a.template_id, action: a.action || "add" } })
+);
+
 // ── Cancel a scheduled post ──
 tool(server, "viralhunt_cancel_post",
   "Cancel the not-yet-published targets of a scheduled post. If everything already published you'll get a 409 — delete it from the platform instead.",

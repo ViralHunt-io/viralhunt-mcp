@@ -23,6 +23,7 @@ loop):
 | `viralhunt_cancel_post` | Cancel the not-yet-published targets of a scheduled post |
 | `viralhunt_list_templates` | Browse the **content template** library (on-brand layouts you fill) |
 | `viralhunt_get_template` | Get one template's full spec (html + css + variable manifest) to render |
+| `viralhunt_assign_template` | Assign a template to a project so its agents can use it (owner/admin) |
 
 Guardrails baked in: it won't post to the wrong brand, only schedules in the future, and is told not to
 repost fake news / copyrighted media / spam.
