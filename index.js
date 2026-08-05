@@ -140,6 +140,35 @@ tool(server, "viralhunt_get_template",
   (a) => vh("/templates.php", { query: { slug: a.slug, id: a.id } })
 );
 
+// ── Content templates: author or edit one ──
+tool(server, "viralhunt_upsert_template",
+  "Create or edit a content template (layout HTML/CSS + variable manifest). Editing a curated/global template CLONES it into the org's own copy — the global is never modified. Every {{placeholder}} in the html must be declared in variables, or the call is rejected. Owner/admin only. On update you may send only the fields that change.",
+  {
+    action: z.enum(["create", "update"]).optional().describe("create (default) or update."),
+    id: z.number().int().optional().describe("On update: the template id to edit."),
+    slug_ref: z.string().optional().describe("On update: the slug to edit, if you don't have the id."),
+    slug: z.string().describe("Stable kebab-case id for the template, e.g. my-quote-card."),
+    name: z.string().optional().describe("Human-readable name."),
+    category: z.string().optional().describe("image | quote | video | top3 | …"),
+    media_type: z.enum(["image", "video"]).optional(),
+    network: z.string().optional().describe("Network it suits, or omit for any."),
+    aspect: z.string().optional().describe("Default format's aspect, e.g. 4:5."),
+    canvas_w: z.number().int().optional(),
+    canvas_h: z.number().int().optional(),
+    formats: z.array(z.object({}).passthrough()).optional().describe("[{name,w,h,aspect?,networks?,default?}] — the sizes this one layout ships."),
+    description: z.string().optional(),
+    html: z.string().optional().describe("Layout with {{variable}} placeholders. Max 256KB."),
+    css: z.string().optional().describe("Styles; reference palette tokens via CSS vars. Max 256KB."),
+    palette: z.object({}).passthrough().optional().describe("Design tokens → hex, e.g. {\"cyan\":\"#1edbee\"}."),
+    fonts: z.array(z.object({}).passthrough()).optional().describe("[{family,weight,style,url_woff2}] — fonts must travel with the template."),
+    variables: z.array(z.object({}).passthrough()).optional().describe("The manifest: [{key,label,type,description,rules,example,fallback,required}]."),
+    content_source: z.object({}).passthrough().optional().describe("Optional curated-bank binding instead of generating values."),
+    render_tech: z.string().optional().describe("How the agent turns this into a file."),
+    is_active: z.boolean().optional(),
+  },
+  (a) => vh("/templates.php", { method: "POST", body: a })
+);
+
 // ── Content templates: wire one to a brand ──
 tool(server, "viralhunt_assign_template",
   "Assign (or unassign) a content template to a project, so that project's agents see it via viralhunt_list_templates with assigned=true. Owner/admin only.",
