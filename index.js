@@ -75,7 +75,7 @@ tool(server, "viralhunt_trending",
   {
     source: z.enum(["tiktok", "instagram", "x", "facebook", "pinterest", "bluesky", "douyin", "reddit", "mastodon", "tumblr", "hackernews", "rss"]).describe("Which network to pull trending from."),
     sort: z.string().optional().describe("viral (default), engagement, newest, oldest, plus per network: most_liked, most_viewed, most_commented, most_retweeted, most_reposted, most_saved, most_upvoted (reddit), most_boosted (mastodon), most_noted (tumblr), most_points (hackernews); rss: trending, engagement, growth, bluesky, mentions, coverage, hn, comments."),
-    time_range: z.enum(["6h", "12h", "24h", "7d", "30d", "3m", "all"]).optional().describe("Time window on the post's own publish date (default 7d)."),
+    time_range: z.enum(["6h", "12h", "24h", "7d", "30d", "3m", "all"]).optional().describe("Time window on the post's own publish date (default 7d). Tumblr's corpus fills slowly: use 30d or all for tumblr, 7d is often empty there."),
     keyword: z.string().optional().describe("Filter by keyword/niche (matched in title, text, hashtags or author)."),
     subreddit: z.string().optional().describe("reddit only: restrict to one subreddit (with or without r/)."),
     min_engagement: z.number().int().min(0).optional().describe("Minimum engagement on the network's main metric."),
