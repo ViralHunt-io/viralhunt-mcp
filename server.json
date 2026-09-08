@@ -6,12 +6,12 @@
     "url": "https://github.com/viralhunt-io/viralhunt-mcp",
     "source": "github"
   },
-  "version": "0.2.0",
+  "version": "0.2.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "viralhunt-mcp",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "transport": {
         "type": "stdio"
       },
