@@ -71,7 +71,7 @@ tool(server, "viralhunt_trending",
     "Read it carefully: growth_24h null means 'we cannot say', NOT zero (Facebook and Pinterest never carry it); delta 0 with",
     "samples >= 2 means measured and unchanged (flat), not missing; `hours` is the REAL window between the two readings (the newest",
     "reading at least 20h older than the latest, or the oldest one when the post is younger than that), so it is often under 24:",
-    "quote it, never assume 24; `percent` is null when `from` is under 100 (from zero or from a handful of interactions a percentage",
+    "quote it, never assume 24, and say 'in 24h' only when `full_window` is true; `percent` is null when `from` is under 100 (from zero or from a handful of interactions a percentage",
     "is noise) while `delta` always holds the absolute change. A high delta over few hours is what 'going viral right now' looks like.",
   ].join(" "),
   {
