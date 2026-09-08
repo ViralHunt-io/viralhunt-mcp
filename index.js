@@ -205,5 +205,148 @@ tool(server, "viralhunt_cancel_post",
   (a) => vh("/schedule.php", { method: "POST", query: { action: "cancel" }, body: { id: a.id } })
 );
 
+// ── When to post ──
+tool(server, "viralhunt_best_time",
+  [
+    "Best time to post on a network, measured on the posts that went viral there in the last 365 days (their OWN publish time).",
+    "Returns best_slots (weekday + hour, ranked by average engagement, each with its sample size and hit_rate_pct = share of that slot's",
+    "posts that reached the network's top 10%), worst_slot, today's best hours, by_hour and by_weekday tables, proof_posts, and",
+    "sample {posts, window, from, to}. Read `confidence` (high >= 500 posts, medium >= 200, low) before quoting an hour. Hours are",
+    "rotated to `timezone`; weekday aggregates stay UTC. With `keyword`, slots are recomputed on posts whose caption contains it;",
+    "if that sample is under 200 posts the response says fallback:true and returns the network-wide slots instead.",
+  ].join(" "),
+  {
+    network: z.enum(["tiktok", "instagram", "x", "facebook", "pinterest", "bluesky", "mastodon", "douyin", "tumblr", "reddit"]).describe("Which network."),
+    timezone: z.string().optional().describe("IANA zone to express hours in, e.g. America/Mexico_City (default UTC)."),
+    keyword: z.string().optional().describe("Optional niche word; slots recomputed on posts whose caption contains it (falls back when thin)."),
+  },
+  (a) => vh("/best-time.php", { query: { network: a.network, timezone: a.timezone, keyword: a.keyword } })
+);
+
+// ── Top hashtags ──
+tool(server, "viralhunt_top_hashtags",
+  [
+    "Top hashtags from the captions of the posts we hold, per network or across all, optionally filtered to tags containing a word.",
+    "Each row carries posts (sample size), total_engagement and per_post (the number to compare: a tag used less but hitting harder).",
+    "`window` is all-time over the corpus with updated_at (there is no per-day hashtag history; say so if asked for 'this week').",
+    "Pass `hashtag` to get one tag broken down by network with its top posts.",
+  ].join(" "),
+  {
+    network: z.enum(["tiktok", "instagram", "x", "facebook", "pinterest", "bluesky", "mastodon", "douyin", "tumblr"]).optional().describe("One network, or omit for all networks summed."),
+    q: z.string().optional().describe("Only hashtags containing this word (niche filter)."),
+    hashtag: z.string().optional().describe("One hashtag (with or without #) for its per-network breakdown."),
+    sort: z.enum(["engagement", "posts", "per_post"]).optional().describe("Ranking (default engagement)."),
+    min_posts: z.number().int().min(1).optional().describe("Minimum posts a tag needs to be listed (default 3)."),
+    per_page: z.number().int().min(1).max(100).optional(),
+    page: z.number().int().min(1).optional(),
+  },
+  (a) => vh("/hashtags.php", { query: { network: a.network, q: a.q, hashtag: a.hashtag, sort: a.sort, min_posts: a.min_posts, per_page: a.per_page || 20, page: a.page } })
+);
+
+// ── Trending sounds ──
+tool(server, "viralhunt_trending_sounds",
+  [
+    "Trending sounds/audio on TikTok, Instagram Reels and Douyin, ranked by the engagement of the posts that used them, cross-network",
+    "sounds first. A sound is listed only when several different accounts used it (one account's audio is a voiceover, not a trend).",
+    "Each sound carries networks{tiktok|instagram|douyin: posts, creators, eng, per_post}, cross (on more than one network) and stronger",
+    "(tiktok|instagram|even, per post) when both sides are measured. Pass `slug` for one sound with the posts that used it.",
+    "Window is all-time over the corpus.",
+  ].join(" "),
+  {
+    network: z.enum(["tiktok", "instagram", "douyin", "all"]).optional().describe("One network or all (default all)."),
+    q: z.string().optional().describe("Filter by words in the title or artist."),
+    cross_only: z.boolean().optional().describe("Only sounds trending on more than one network."),
+    slug: z.string().optional().describe("One sound's slug (from a previous result) for its detail and posts."),
+    per_page: z.number().int().min(1).max(100).optional(),
+    page: z.number().int().min(1).optional(),
+  },
+  (a) => vh("/sounds.php", { query: { network: a.network, q: a.q, cross_only: a.cross_only ? 1 : undefined, slug: a.slug, per_page: a.per_page || 20, page: a.page } })
+);
+
+// ── Best communities ──
+tool(server, "viralhunt_best_communities",
+  [
+    "Where to post a topic: the best subreddits (network=reddit) or Bluesky custom feeds (network=bluesky) from our own measurements.",
+    "Reddit rows are ranked by peak_per_1k, the best score we hold per 1,000 members (upside relative to size); no average score is",
+    "published because a swept community's sample is its greatest hits. Each row carries members, sample.posts and the window of post",
+    "dates. Pass `subreddit` for one community: timing (best UTC hours/day the climbing posts were posted), pace, flairs, type mix,",
+    "top posts and similar communities. Bluesky rows carry posts, authors, avg_likes; pass `feed` (slug) for its top posts, authors, tags.",
+  ].join(" "),
+  {
+    network: z.enum(["reddit", "bluesky"]).optional().describe("reddit (default) or bluesky."),
+    q: z.string().optional().describe("Topic words matched against the community name (and, on Bluesky, the feed description)."),
+    subreddit: z.string().optional().describe("reddit: one community by name for its full detail."),
+    feed: z.string().optional().describe("bluesky: one feed by slug for its full detail."),
+    sort: z.string().optional().describe("reddit: upside (default), members, peak, posts. bluesky: posts (default), avg_likes, top_likes, feed_likes."),
+    min_members: z.number().int().min(0).optional().describe("reddit: only communities with at least this many members."),
+    max_members: z.number().int().min(0).optional().describe("reddit: only communities with at most this many members (smaller rooms are easier to climb)."),
+    per_page: z.number().int().min(1).max(100).optional(),
+    page: z.number().int().min(1).optional(),
+  },
+  (a) => vh("/communities.php", { query: { network: a.network || "reddit", q: a.q, subreddit: a.subreddit, feed: a.feed, sort: a.sort, min_members: a.min_members, max_members: a.max_members, per_page: a.per_page || 20, page: a.page } })
+);
+
+// ── Editorial board (team kanban): curate before publishing ──
+tool(server, "viralhunt_board_context",
+  "The team's Editorial Board in one call: organization, members (people and agents, with ids to assign cards to), columns (with is_default / is_done flags) and categories. Call this before creating or moving cards.",
+  {},
+  () => vh("/context.php")
+);
+
+tool(server, "viralhunt_create_card",
+  [
+    "Create a card on the Editorial Board: a piece of content to curate, with an optional post URL (title/description/image are filled",
+    "from the URL's metadata when omitted), assignee, priority, due date, category and column. Returns the card with its id.",
+    "Use it to hand a trending post to a teammate instead of publishing it directly.",
+  ].join(" "),
+  {
+    title: z.string().optional().describe("Card title (required unless post_url is given)."),
+    post_url: z.string().optional().describe("The post/article this card is about; metadata is fetched when title/image are missing."),
+    description: z.string().optional(),
+    priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+    due_date: z.string().optional().describe("YYYY-MM-DD."),
+    assigned_to_user_id: z.number().int().optional().describe("A member id from viralhunt_board_context."),
+    category_id: z.number().int().optional(),
+    card_type: z.string().optional().describe("Post, Note, Article, Video… (the org's card types)."),
+    board_column_id: z.number().int().optional().describe("Target column (default: the board's default column)."),
+    image_url: z.string().optional(),
+    platform: z.string().optional().describe("tiktok, instagram, x, facebook, pinterest, rss… (detected from post_url when omitted)."),
+    notes: z.string().optional(),
+  },
+  (a) => vh("/cards.php", { method: "POST", body: a })
+);
+
+tool(server, "viralhunt_move_card",
+  "Move a card to another column (moving into the column flagged is_done completes it; a 'done' comment does not).",
+  {
+    card_id: z.number().int(),
+    board_column_id: z.number().int().describe("Target column id from viralhunt_board_context."),
+    position: z.number().int().min(0).optional().describe("Position inside the column (0 = top)."),
+  },
+  (a) => vh("/cards.php", { method: "POST", body: { action: "move", card_id: a.card_id, board_column_id: a.board_column_id, position: a.position } })
+);
+
+tool(server, "viralhunt_my_cards",
+  "Cards assigned to the authenticated token's member (your own workload when you are an agent member of the team). Optional status filter.",
+  {
+    status: z.enum(["pending", "in_progress", "completed"]).optional(),
+    project: z.string().optional().describe("Restrict to one project/brand by name."),
+    per_page: z.number().int().min(1).max(100).optional(),
+    page: z.number().int().min(1).optional(),
+  },
+  (a) => vh("/my-cards.php", { query: a })
+);
+
+tool(server, "viralhunt_card_comments",
+  "Read the comments on a card, or add one (comment set). New comments notify the assignee and appear in the team chat's #board channel.",
+  {
+    card_id: z.number().int(),
+    comment: z.string().optional().describe("When given, posts this comment; when omitted, lists the card's comments."),
+  },
+  (a) => a.comment
+    ? vh("/comments.php", { method: "POST", body: { card_id: a.card_id, comment: a.comment } })
+    : vh("/comments.php", { query: { card_id: a.card_id } })
+);
+
 await server.connect(new StdioServerTransport());
 console.error("viralhunt-mcp running (base: " + BASE_URL + ")");

@@ -10,12 +10,17 @@ docs: **https://viralhunt.io/api**.
 
 ## What an agent can do through this MCP server
 
-These are the tools this server exposes (they drive the full **discover → publish → verify → correct**
-loop):
+These are the tools this server exposes (they drive the full **discover → time it → publish → verify →
+correct** loop). Every number comes with its sample size and time window, so an agent can say how
+much to trust it:
 
 | Tool | What it does |
 |------|--------------|
-| `viralhunt_trending` | **Find topics** — what's going viral on TikTok / Instagram / X / Facebook / Pinterest / RSS, ranked by viral score (engagement velocity) |
+| `viralhunt_trending` | **Find topics** — what's going viral on TikTok, Instagram, X, Facebook, Pinterest, Bluesky, Douyin, Reddit, Mastodon, Tumblr, Hacker News and news RSS, ranked by viral score, each post with `growth_24h` (how much it moved between our two most distant readings) |
+| `viralhunt_best_time` | **When to post** — best weekday + hour per network from the posts that went viral there (365-day sample, hit rate, sample size, your time zone, optional niche keyword) |
+| `viralhunt_top_hashtags` | **Which hashtags** — top tags per network or across all, by engagement, posts or per-post; one tag's breakdown by network |
+| `viralhunt_trending_sounds` | **Which sound** — trending audio on TikTok, Instagram Reels and Douyin, cross-network sounds first, with the posts that used it |
+| `viralhunt_best_communities` | **Where to post** — best subreddits (peak per 1,000 members, timing, top posts, similar) and Bluesky custom feeds for a topic |
 | `viralhunt_targets` | List your **brands/projects** and the connected accounts you can post to |
 | `viralhunt_schedule` | **Publish now or schedule** a post (text + media) across your connected accounts |
 | `viralhunt_get_post` | Check a post's status + per-network permalinks |
@@ -25,6 +30,11 @@ loop):
 | `viralhunt_get_template` | Get one template's full spec (html + css + variable manifest) to render |
 | `viralhunt_upsert_template` | **Author or edit a template** — editing a curated one clones it into your copy (owner/admin) |
 | `viralhunt_assign_template` | Assign a template to a project so its agents can use it (owner/admin) |
+| `viralhunt_board_context` | The team's **Editorial Board** in one call: members (with ids), columns, categories |
+| `viralhunt_create_card` | **Hand a post to a teammate** — create a kanban card (URL metadata auto-filled, assignee, priority, due date, category) |
+| `viralhunt_move_card` | Move a card to another column (the `is_done` column completes it) |
+| `viralhunt_my_cards` | The cards assigned to you (when the token belongs to an agent member of the team) |
+| `viralhunt_card_comments` | Read or add comments on a card (notifies the assignee, mirrors to team chat) |
 
 Guardrails baked in: it won't post to the wrong brand, only schedules in the future, and is told not to
 repost fake news / copyrighted media / spam.
@@ -45,8 +55,9 @@ ViralHunt is a full product; the tools above are the agent-drivable slice. The r
   cap that resets. Configured in the app (runs via webhooks); Facebook next.
 - **Reports** — what each brand/network actually did: posts, reach, DMs sent, replies, top content.
 
-> Note: Auto-DM and the editorial board are **product features**, not tools this MCP exposes today. This
-> server focuses on the discover → publish → manage loop.
+> Note: Auto-DM and Reports are **product features**, not tools this MCP exposes today. The editorial
+> board is exposed (context, cards, moves, comments) so an agent can hand content to a team instead
+> of publishing it directly.
 
 ## Install (Claude Desktop / Cline)
 
