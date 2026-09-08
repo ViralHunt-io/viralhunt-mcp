@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "name": "io.github.rodvan/viralhunt-mcp",
-  "description": "Find trending content and schedule posts across social networks via the ViralHunt.io API.",
+  "description": "Find trending content on 12 networks, learn the best time to post, top hashtags, trending sounds and best communities, and schedule posts via the ViralHunt.io API.",
   "repository": {
     "url": "https://github.com/viralhunt-io/viralhunt-mcp",
     "source": "github"
   },
-  "version": "0.1.5",
+  "version": "0.2.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "viralhunt-mcp",
-      "version": "0.1.5",
+      "version": "0.2.0",
       "transport": {
         "type": "stdio"
       },
