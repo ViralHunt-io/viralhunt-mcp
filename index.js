@@ -14,6 +14,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+// One version, read from package.json: the server announced 0.1.0 while the package was at 0.1.5
+// for several releases, so directories showed a version that matched nothing they could install.
+const PKG = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "package.json"), "utf8"));
 
 const API_KEY = process.env.VIRALHUNT_API_KEY || "";
 const BASE_URL = (process.env.VIRALHUNT_BASE_URL || "https://viralhunt.io/tool/api/v1").replace(/\/+$/, "");
@@ -52,19 +59,30 @@ function tool(server, name, description, schema, handler) {
   });
 }
 
-const server = new McpServer({ name: "viralhunt", version: "0.1.0" });
+const server = new McpServer({ name: "viralhunt", version: PKG.version });
 
 // ── Discover trending content ──
 tool(server, "viralhunt_trending",
-  "Find trending/viral posts on a social network, ranked by viral score (engagement velocity).",
+  [
+    "Find trending/viral posts on a social network, ranked by viral score (engagement velocity).",
+    "Sources: tiktok, instagram, x, facebook, pinterest, bluesky, douyin, reddit, mastodon, tumblr, hackernews, and rss (news articles",
+    "from 230 feeds plus articles discovered through social links, each with Facebook/Reddit/Bluesky/Hacker News/comment signals).",
+    "Each post carries growth_24h when we hold at least two readings of it: {from, to, delta, percent, hours, measured_at, samples}.",
+    "Read it carefully: growth_24h null means 'we cannot say', NOT zero (Facebook and Pinterest never carry it); `hours` is the REAL",
+    "window between the two readings and is not always 24, so quote it; `percent` is null when the post started from zero while",
+    "`delta` still holds the absolute change. A high delta over few hours is what 'going viral right now' looks like.",
+  ].join(" "),
   {
-    source: z.enum(["tiktok", "instagram", "x", "facebook", "pinterest", "rss"]).describe("Which network to pull trending from."),
-    sort: z.string().optional().describe("viral (default), most_liked, most_viewed, most_commented, newest, …"),
-    time_range: z.enum(["24h", "7d", "30d", "3m", "all"]).optional().describe("Time window (default 7d)."),
-    keyword: z.string().optional().describe("Filter by keyword/niche."),
+    source: z.enum(["tiktok", "instagram", "x", "facebook", "pinterest", "bluesky", "douyin", "reddit", "mastodon", "tumblr", "hackernews", "rss"]).describe("Which network to pull trending from."),
+    sort: z.string().optional().describe("viral (default), engagement, newest, oldest, plus per network: most_liked, most_viewed, most_commented, most_retweeted, most_reposted, most_saved, most_upvoted (reddit), most_boosted (mastodon), most_noted (tumblr), most_points (hackernews); rss: trending, engagement, growth, bluesky, mentions, coverage, hn, comments."),
+    time_range: z.enum(["6h", "12h", "24h", "7d", "30d", "3m", "all"]).optional().describe("Time window on the post's own publish date (default 7d)."),
+    keyword: z.string().optional().describe("Filter by keyword/niche (matched in title, text, hashtags or author)."),
+    subreddit: z.string().optional().describe("reddit only: restrict to one subreddit (with or without r/)."),
+    min_engagement: z.number().int().min(0).optional().describe("Minimum engagement on the network's main metric."),
     per_page: z.number().int().min(1).max(100).optional().describe("How many results (max 100)."),
+    page: z.number().int().min(1).optional().describe("Page number for more results."),
   },
-  (a) => vh("/trending.php", { query: { source: a.source, sort: a.sort || "viral", time_range: a.time_range || "7d", keyword: a.keyword, per_page: a.per_page || 20 } })
+  (a) => vh("/trending.php", { query: { source: a.source, sort: a.sort || "viral", time_range: a.time_range || "7d", keyword: a.keyword, subreddit: a.subreddit, min_engagement: a.min_engagement, per_page: a.per_page || 20, page: a.page } })
 );
 
 // ── Where can I publish (projects + connected accounts) ──
