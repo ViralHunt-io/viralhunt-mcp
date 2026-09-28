@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "name": "io.github.rodvan/viralhunt-mcp",
-  "description": "Find trending content on 12 networks, search one keyword everywhere, learn the best time to post, top hashtags, trending sounds and best communities, make images on the brand's templates, leave and review drafts, translate posts, and publish or schedule via the ViralHunt.io API.",
+  "description": "Trending content on 12 networks, best time, hashtags, templates, drafts and review, publish to 11.",
   "repository": {
     "url": "https://github.com/viralhunt-io/viralhunt-mcp",
     "source": "github"
