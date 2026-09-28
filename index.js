@@ -77,52 +77,186 @@ tool(server, "viralhunt_trending",
   {
     source: z.enum(["tiktok", "instagram", "x", "facebook", "pinterest", "bluesky", "douyin", "reddit", "mastodon", "tumblr", "hackernews", "rss"]).describe("Which network to pull trending from."),
     sort: z.string().optional().describe("viral (default), engagement, newest, oldest, plus per network: most_liked, most_viewed, most_commented, most_retweeted, most_reposted, most_saved, most_upvoted (reddit), most_boosted (mastodon), most_noted (tumblr), most_points (hackernews); rss: trending, engagement, growth, bluesky, mentions, coverage, hn, comments."),
-    time_range: z.enum(["6h", "12h", "24h", "7d", "30d", "3m", "all"]).optional().describe("Time window on the post's own publish date (default 7d). Tumblr's corpus fills slowly: use 30d or all for tumblr, 7d is often empty there."),
+    time_range: z.string().optional().describe("Time window on the post's own publish date: any number with a unit (24h, 7d, 30d, 2w, 3m, 1y), a bare number of days, or all (default 7d). An unknown value is a 422. Tumblr's corpus fills slowly: use 30d or all there."),
     keyword: z.string().optional().describe("Filter by keyword/niche (matched in title, text, hashtags or author)."),
+    author: z.string().optional().describe("ONE page or account only (facebook page name, x handle or name, tiktok or instagram username; contains-match). 'The most viral posts of the page X in 2025' = source + author + time_range=1y."),
     subreddit: z.string().optional().describe("reddit only: restrict to one subreddit (with or without r/)."),
     min_engagement: z.number().int().min(0).optional().describe("Minimum engagement on the network's main metric."),
     per_page: z.number().int().min(1).max(100).optional().describe("How many results (max 100)."),
     page: z.number().int().min(1).optional().describe("Page number for more results."),
   },
-  (a) => vh("/trending.php", { query: { source: a.source, sort: a.sort || "viral", time_range: a.time_range || "7d", keyword: a.keyword, subreddit: a.subreddit, min_engagement: a.min_engagement, per_page: a.per_page || 20, page: a.page } })
+  (a) => vh("/trending.php", { query: { source: a.source, sort: a.sort || "viral", time_range: a.time_range || "7d", keyword: a.keyword, author: a.author, subreddit: a.subreddit, min_engagement: a.min_engagement, per_page: a.per_page || 20, page: a.page } })
+);
+
+// ── Who is this key: plan, quota, credits ──
+tool(server, "viralhunt_account",
+  "Who this key is: plan (free/creator/studio/agency), requests per hour, whether it can publish, today's daily content-query quota (free plan: 24 shared across trending, search, best-time, hashtags, sounds, communities), credits balance, and per-endpoint rules. Call it once at the start and again on a 429 or 402, and set expectations from it (free plan: trending is 72h delayed and numbers are withheld, never print 0).",
+  {},
+  () => vh("/account.php")
+);
+
+// ── One keyword, every network ──
+tool(server, "viralhunt_search",
+  [
+    "Search one keyword across every network at once (or a chosen subset) and get one merged, ranked list: each row normalized to",
+    "platform, id, title, description, post_url, thumbnail_url, author_name, author_handle, engagement_score, stats, growth_24h,",
+    "created_at, plus the network's full row under raw. sources[] says per network how many posts matched (total), so you can tell the",
+    "user where the topic lives and where the corpus holds nothing (total 0 = say so, never invent posts). All words must appear, in any order.",
+    "Use viralhunt_trending when the user wants ONE network with its own sorts and paging.",
+  ].join(" "),
+  {
+    keyword: z.string().describe("The words to find (all must appear)."),
+    sources: z.string().optional().describe("all (default) or a comma list: pinterest,x,reddit,tiktok,instagram,facebook,bluesky,douyin,mastodon,tumblr,hackernews,rss."),
+    time_range: z.string().optional().describe("Window on the post's own date (default 30d): a number with a unit, a bare number of days, or all."),
+    per_source: z.number().int().min(1).max(50).optional().describe("Rows per network (default 10)."),
+    sort: z.enum(["engagement", "recent"]).optional(),
+    min_engagement: z.number().int().min(0).optional(),
+  },
+  (a) => vh("/search.php", { query: { keyword: a.keyword, sources: a.sources, time_range: a.time_range, per_source: a.per_source, sort: a.sort, min_engagement: a.min_engagement } })
 );
 
 // ── Where can I publish (projects + connected accounts) ──
 tool(server, "viralhunt_targets",
-  "List the user's projects/brands and the connected social accounts you can publish to in each.",
+  [
+    "List the user's projects/brands and the connected social accounts you can publish to in each. Also returns needs_reconnect",
+    "(expired connections: not targets until a person reconnects them in the app; name the network before publishing), media_limits",
+    "per network (image bytes: bigger ones are re-encoded to fit; video bytes and seconds: a bigger or longer video is refused for that",
+    "network only, with the numbers; text length), and each project's lang and translates_to (linked projects in another language).",
+  ].join(" "),
   { project: z.string().optional().describe("Project name to scope the accounts to (optional).") },
   (a) => vh("/schedule.php", { query: { action: "targets", project: a.project } })
 );
 
-// ── Publish now or schedule ──
+// ── Publish now, schedule, or leave a draft ──
 tool(server, "viralhunt_schedule",
-  "Publish now or schedule a post (text + media URLs) to a project's connected accounts. Verify content before posting — never publish fake news, copyrighted media, or spam.",
+  [
+    "Publish now, schedule, or (default when the user did not ask to publish right now) leave a DRAFT of a post on a project's",
+    "connected accounts. Ask the user before publishing or scheduling: it posts to real accounts. Verify content first: never fake",
+    "news, copyrighted media or spam. Never use another page's text as the copy or its branded picture as the post's picture: the",
+    "picture comes from the organization's templates (viralhunt_get_template), either rendered by you and passed in media, or passed",
+    "as `design` with draft=true so the app renders it when a person approves. Returns {id, status, results, warnings, review_url}:",
+    "status processing|scheduled|draft|partial|failed; results keyed by account id carry each network's own reason when it refused.",
+  ].join(" "),
   {
     project: z.string().optional().describe("Project name — REQUIRED if the org has more than one project."),
     project_id: z.number().int().optional().describe("Project id — alternative to project name."),
-    body: z.string().optional().describe("Caption/text. Optional if media is provided."),
-    media: z.array(z.string()).optional().describe("Public image/video URLs."),
+    body: z.string().optional().describe("Caption/text. Optional if media or design is provided."),
+    media: z.array(z.string()).optional().describe("Public image/video URLs. Check media_limits (viralhunt_targets) before a big video."),
     networks: z.array(z.string()).optional().describe('Post to every account on these networks, e.g. ["instagram","facebook"].'),
     target_account_ids: z.array(z.number().int()).optional().describe("Exact account ids (from viralhunt_targets). Omit = all accounts in the project."),
-    scheduled_at: z.string().optional().describe("ISO-8601 UTC, e.g. 2026-08-01T15:30:00Z. Omit = publish now."),
+    scheduled_at: z.string().optional().describe("ISO-8601 UTC, e.g. 2026-08-01T15:30:00Z. Omit = publish now (or, with draft, the tentative time is 'when approved')."),
     first_comment: z.string().optional().describe("Optional first comment (link-in-comments)."),
+    draft: z.boolean().optional().describe("true = save it in Drafts for a person to review and approve; nothing is sent. Use it unless the user explicitly asked to publish now."),
+    overrides: z.object({}).passthrough().optional().describe('Per-network (or per account id) copy or media: {"bluesky": {"body": "short version"}, "12": {"media": ["…"]}}. Bluesky takes 300 characters, X 280.'),
+    card_id: z.number().int().optional().describe("The Editorial Board card this post comes from (optional)."),
+    design: z.object({}).passthrough().optional().describe('The picture as a filled template instead of a rendered file: {"template": "<slug or id>", "format": "feed", "variables": {"text": "…", "highlight": "…", "image": "https://…", "caption": "…"}}. Needs draft=true when media is empty; the app renders it when a person approves.'),
   },
   (a) => vh("/schedule.php", { method: "POST", query: { action: "create" }, body: {
     project: a.project, project_id: a.project_id, body: a.body, media: a.media,
     networks: a.networks, target_account_ids: a.target_account_ids, scheduled_at: a.scheduled_at, first_comment: a.first_comment,
+    draft: a.draft ? true : undefined, overrides: a.overrides, card_id: a.card_id, design: a.design,
   } })
+);
+
+// ── Drafts: the limbo before sending ──
+tool(server, "viralhunt_drafts",
+  "List the drafts waiting for a review and an approval (this project, or every project with all=true). Each carries body, media, targets, scheduled_at, overrides, card_id, submitted_via (api = from an agent), design, lang, translated_from_id and review {score, verdict, reviewed_at, entries[]}.",
+  {
+    project: z.string().optional().describe("Project name (default: the org's first project)."),
+    project_id: z.number().int().optional(),
+    all: z.boolean().optional().describe("true = every project of the organization."),
+  },
+  (a) => vh("/schedule.php", { query: { action: "drafts", project: a.project, project_id: a.project_id, all: a.all ? 1 : undefined } })
+);
+
+tool(server, "viralhunt_review_draft",
+  [
+    "Append your review to a draft: verdict ok|fix|block, a score 0-100, per-topic scores (tos_risk, fake_news, sensationalism, grammar),",
+    "one warning per issue with the network it concerns, and a short note on how to fix it. Judge each target network's terms (violence,",
+    "health claims, politics, minors, copyright, spam), unverified claims (cross-check with viralhunt_search / trending rss), sensationalism,",
+    "grammar. `block` only for what must not go out as it is. If the organization sends drafts by themselves on an OK review, an `ok` verdict",
+    "SENDS the draft and the answer carries `sent`: give ok only when you would approve it yourself, and tell the user.",
+  ].join(" "),
+  {
+    id: z.number().int().describe("The draft id."),
+    verdict: z.enum(["ok", "fix", "block"]),
+    score: z.number().int().min(0).max(100).optional(),
+    scores: z.object({}).passthrough().optional().describe('{"tos_risk": 90, "fake_news": 70, "sensationalism": 80, "grammar": 95}'),
+    warnings: z.array(z.object({ code: z.string().optional(), network: z.string().optional(), text: z.string(), severity: z.enum(["info", "warn", "block"]).optional() })).optional(),
+    note: z.string().optional().describe("How to fix it, and the source you verified against."),
+  },
+  (a) => vh("/schedule.php", { method: "POST", query: { action: "review" }, body: { id: a.id, verdict: a.verdict, score: a.score, scores: a.scores, warnings: a.warnings, note: a.note } })
+);
+
+tool(server, "viralhunt_approve_draft",
+  [
+    "Send a draft (owner or admin token only, and never without the user's explicit yes). A draft blocked by its last review cannot be",
+    "approved until it is fixed and reviewed again. `translations` makes the translated draft in each linked project in the same call",
+    "(see viralhunt_translate_post). Returns {status, results, warnings, translations[]}.",
+  ].join(" "),
+  {
+    id: z.number().int().describe("The draft id."),
+    translations: z.array(z.object({ project_id: z.number().int(), lang: z.string().optional(), account_ids: z.array(z.number().int()).optional(), image: z.string().optional(), send_mode: z.enum(["draft", "send"]).optional() })).optional(),
+  },
+  (a) => vh("/schedule.php", { method: "POST", query: { action: "approve" }, body: { id: a.id, translations: a.translations } })
+);
+
+tool(server, "viralhunt_translate_post",
+  [
+    "Make the translated draft of a post (a draft or one already sent) in a linked project that publishes in another language. The app",
+    "adapts the copy, the first comment, the per-network copies, the thread and the TEXT variables of a design (hashtags in the new",
+    "language; links, mentions, numbers and names kept): do not translate yourself. A design keeps its picture and the answer carries",
+    "needs_png=true with render {html, css, format}: render it, store the PNG with viralhunt_update_post {id, png}, then approve if wanted.",
+    "A plain picture (no template) stays unless `image` hands the translated one. The same translation twice is refused.",
+  ].join(" "),
+  {
+    id: z.number().int().describe("The source post id."),
+    project_id: z.number().int().describe("The target project (from translates_to on viralhunt_targets)."),
+    lang: z.string().optional().describe("Override the target language (es, en, pt, fr, de, it…)."),
+    account_ids: z.array(z.number().int()).optional().describe("Accounts of the target project (default: all postable)."),
+    image: z.string().optional().describe("https URL of the translated picture, for a post whose picture is not a template."),
+    send_mode: z.enum(["draft", "send"]).optional().describe("draft (default) waits in the target project; send (owner/admin) goes out at once when there is nothing to render."),
+  },
+  (a) => vh("/schedule.php", { method: "POST", query: { action: "translate" }, body: { id: a.id, project_id: a.project_id, lang: a.lang, account_ids: a.account_ids, image: a.image, send_mode: a.send_mode } })
+);
+
+tool(server, "viralhunt_edit_log",
+  "What people changed in drafts after an agent left them: one row per field (body, media, targets, scheduled_at, first_comment, overrides, thread, design) with before, after, who and when, plus by_field counts. Drafts with submitted_via=api came from an agent: those edits are what the person did not like. Read it at the start of each batch and apply the pattern (shorter captions, another picture, another hour).",
+  {
+    since: z.string().optional().describe("ISO-8601: only changes after this moment."),
+    id: z.number().int().optional().describe("Only one draft's changes."),
+    limit: z.number().int().min(1).max(500).optional(),
+  },
+  (a) => vh("/schedule.php", { query: { action: "edit_log", since: a.since, id: a.id, limit: a.limit } })
+);
+
+tool(server, "viralhunt_sync_post",
+  "Refresh the status of this organization's posts from the networks (call before viralhunt_get_post when the answer matters). Returns how many rows were re-read.",
+  {},
+  () => vh("/schedule.php", { method: "POST", query: { action: "sync" }, body: {} })
 );
 
 // ── Check status ──
 tool(server, "viralhunt_get_post",
-  "Get the current status and per-network results (incl. permalinks) of a post you created.",
+  [
+    "Get the current status and per-network results (incl. permalinks) of a post you created. Statuses: scheduled (queued), processing",
+    "(handed to the networks, or a target being retried), published (every target live), partial (some refused: each failed",
+    "results[account].error carries the network's own words and error_message sums it up), failed, draft, canceled. The app retries a",
+    "transient failure up to three times (results show retries, will_retry, retry_after); a final reason (dead connection, refused text,",
+    "oversized video) is not retried: tell the user what to fix. On a draft with a design the answer also carries render {html, css, format}.",
+  ].join(" "),
   { id: z.number().int().describe("The post id returned by viralhunt_schedule.") },
   (a) => vh("/schedule.php", { query: { action: "get", id: a.id } })
 );
 
-// ── Edit a scheduled post ──
+// ── Edit a scheduled post or a draft ──
 tool(server, "viralhunt_update_post",
-  "Edit a still-scheduled post. Only works while status is 'scheduled' and >5 min before publish. Only the fields you send change; the project cannot be changed. Check status with viralhunt_get_post first; on a 409 error re-fetch instead of retrying.",
+  [
+    "Edit a post. A DRAFT can be changed freely (body, media, overrides, first_comment, targets, scheduled_at, design, and png: the",
+    "rendered picture of its design as a data:image/png;base64 URL, which becomes the post's first picture). A SCHEDULED post can be",
+    "edited only while status is 'scheduled' and more than 5 min before publish. Only the fields you send change; the project cannot",
+    "be changed. Check status with viralhunt_get_post first; on a 409 error re-fetch instead of retrying.",
+  ].join(" "),
   {
     id: z.number().int().describe("The post id."),
     body: z.string().optional().describe("New caption."),
@@ -130,10 +264,81 @@ tool(server, "viralhunt_update_post",
     networks: z.array(z.string()).optional().describe("New network set (adds/removes targets)."),
     target_account_ids: z.array(z.number().int()).optional().describe("New exact account-id set."),
     scheduled_at: z.string().optional().describe("New ISO-8601 UTC time (must be in the future)."),
+    first_comment: z.string().optional().describe("Drafts: the first comment."),
+    overrides: z.object({}).passthrough().optional().describe("Drafts: per-network copy or media."),
+    design: z.object({}).passthrough().optional().describe("Drafts: the filled template (see viralhunt_schedule)."),
+    png: z.string().optional().describe("Drafts: data:image/png;base64,… of the rendered design; stored and made the post's first picture."),
   },
   (a) => vh("/schedule.php", { method: "POST", query: { action: "update" }, body: {
     id: a.id, body: a.body, media: a.media, networks: a.networks, target_account_ids: a.target_account_ids, scheduled_at: a.scheduled_at,
+    first_comment: a.first_comment, overrides: a.overrides, design: a.design, png: a.png,
   } })
+);
+
+// ── What performed ──
+tool(server, "viralhunt_stats",
+  "Engagement of the published posts as the networks report it back: by_network, by_project and top_posts (with permalinks). ready=false means nothing collected yet. Use it to answer 'what worked' and to find more like the winners (viralhunt_search on the winning topic); never invent a number.",
+  {
+    project: z.string().optional(),
+    project_id: z.number().int().optional(),
+    network: z.string().optional(),
+    days: z.number().int().min(1).max(365).optional().describe("Window in days (default 30)."),
+    limit: z.number().int().min(1).max(100).optional(),
+  },
+  (a) => vh("/stats.php", { query: { project: a.project, project_id: a.project_id, network: a.network, days: a.days, limit: a.limit } })
+);
+
+// ── Quotes base ──
+tool(server, "viralhunt_quotes",
+  [
+    "Quotes ranked by our popularity score, for daily-quote series: text, author, author_context (description, born, died), work,",
+    "categories, rights, popularity high|medium|low and author_image (portrait url, licence, credit). Default rights=public_domain",
+    "(authors dead more than 70 years): keep it unless the user asks for a modern author, and with rights=any tell the user a quote is",
+    "restricted before scheduling it under their brand. Write the caption's context FROM author_context and work, never from memory.",
+    "categories_list=true lists the categories held. unused=true leaves out what this organization already used.",
+  ].join(" "),
+  {
+    category: z.string().optional().describe("One category, e.g. stoicism."),
+    categories: z.string().optional().describe("Several mixed: stoicism,leadership."),
+    lang: z.enum(["en", "es"]).optional().describe("Language of the quote (default en)."),
+    max_chars: z.number().int().min(20).max(600).optional().describe("Default 180: what the quote templates fit."),
+    rights: z.enum(["public_domain", "any"]).optional(),
+    author: z.string().optional().describe("Part of an author's name."),
+    sort: z.enum(["score", "random"]).optional(),
+    unused: z.boolean().optional(),
+    categories_list: z.boolean().optional().describe("true = list the categories instead of quotes."),
+    per_page: z.number().int().min(1).max(50).optional(),
+    page: z.number().int().min(1).optional(),
+  },
+  (a) => vh("/quotes.php", { query: { category: a.category, categories: a.categories, lang: a.lang, max_chars: a.max_chars, rights: a.rights, author: a.author, sort: a.sort, unused: a.unused ? 1 : undefined, categories_list: a.categories_list ? 1 : undefined, per_page: a.per_page, page: a.page } })
+);
+
+tool(server, "viralhunt_mark_quote_used",
+  "After scheduling a quote, mark it used for this organization so the next pick (unused=true) is a different one.",
+  { quote_id: z.number().int(), note: z.string().optional().describe("e.g. 'scheduled 2026-09-20 09:00 instagram'.") },
+  (a) => vh("/quotes.php", { method: "POST", body: { action: "mark_used", quote_id: a.quote_id, note: a.note } })
+);
+
+// ── Recipes: standing orders a person saved in the app ──
+tool(server, "viralhunt_recipes",
+  [
+    "The standing orders of a brand, saved by a person in the app: each recipe says what to post from (source quotes|trending|manual with",
+    "source_params, and source_call = the exact request that fetches the content), which template (template.slug for viralhunt_get_template),",
+    "format, networks, cadence (daily|weekdays|weekly|manual), post_time in the project's timezone (null = the network's best time),",
+    "caption_brief and last_run_at. Nothing runs on the server: you do the loop (fetch, fill, render, schedule, mark the quote used,",
+    "then viralhunt_recipe_ran). daily with last_run_at older than today = due. Never run a paused recipe (is_active false).",
+  ].join(" "),
+  {
+    project_id: z.number().int().optional().describe("One brand (default: every active recipe of the organization)."),
+    active: z.boolean().optional(),
+  },
+  (a) => vh("/recipes.php", { query: { project_id: a.project_id, active: a.active === false ? 0 : 1 } })
+);
+
+tool(server, "viralhunt_recipe_ran",
+  "Stamp a recipe run so the person sees in the app that it happened.",
+  { recipe_id: z.number().int(), note: z.string().optional() },
+  (a) => vh("/recipes.php", { method: "POST", body: { action: "ran", recipe_id: a.recipe_id, note: a.note } })
 );
 
 // ── Content templates: browse the library ──
@@ -146,13 +351,20 @@ tool(server, "viralhunt_list_templates",
     project_id: z.number().int().optional().describe("With assigned=true, the project whose allowed templates you want."),
     assigned: z.boolean().optional().describe("true = only the templates assigned to project_id."),
     q: z.string().optional().describe("Search name/description."),
+    favorites: z.boolean().optional().describe("true = only the templates the brand starred. Favourites come first in every list: prefer them when several fit."),
   },
-  (a) => vh("/templates.php", { query: { category: a.category, media_type: a.media_type, network: a.network, q: a.q, assigned: a.assigned ? 1 : undefined, project_id: a.project_id } })
+  (a) => vh("/templates.php", { query: { category: a.category, media_type: a.media_type, network: a.network, q: a.q, assigned: a.assigned ? 1 : undefined, project_id: a.project_id, favorites: a.favorites ? 1 : undefined } })
 );
 
 // ── Content templates: the full layout to render ──
 tool(server, "viralhunt_get_template",
-  "Get one template's full spec: html, css, the variable manifest (with hard rules per variable), formats, palette tokens, embedded fonts and render_tech. Fill every {{variable}}, then render with headless Chrome at the chosen format's size and WAIT for [data-vh-ready='1'] before screenshotting .vh-card.",
+  [
+    "Get one template's full spec: html, css, the variable manifest (with hard rules per variable), formats, palette tokens, embedded fonts,",
+    "render_tech, plus what is `static` (the owner fixed it: logo, frame, signature, fixed texts; never move, cover or restyle it), what is",
+    "`dynamic` (the variables you fill: the picture, the headline, the caption that is the post body), what it `suits` (news, photo, quote,",
+    "number, tip, on_this_day, meme, any) and the owner's `instructions` (they override any general rule). Fill every dynamic {{variable}},",
+    "then render with headless Chrome at the chosen format's size and WAIT for [data-vh-ready='1'] before screenshotting .vh-card.",
+  ].join(" "),
   {
     slug: z.string().optional().describe("Template slug, e.g. vh-image-card."),
     id: z.number().int().optional().describe("Template id — alternative to slug."),

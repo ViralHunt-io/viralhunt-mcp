@@ -16,18 +16,29 @@ much to trust it:
 
 | Tool | What it does |
 |------|--------------|
-| `viralhunt_trending` | **Find topics** — what's going viral on TikTok, Instagram, X, Facebook, Pinterest, Bluesky, Douyin, Reddit, Mastodon, Tumblr, Hacker News and news RSS, ranked by viral score, each post with `growth_24h` (how much it moved between our two most distant readings) |
+| `viralhunt_account` | **Who is this key** — plan, daily quota left, credits, per-endpoint rules (call first) |
+| `viralhunt_trending` | **Find topics** — what's going viral on TikTok, Instagram, X, Facebook, Pinterest, Bluesky, Douyin, Reddit, Mastodon, Tumblr, Hacker News and news RSS, ranked by viral score, each post with `growth_24h` (how much it moved between our two most distant readings); `author` narrows to one page or account |
+| `viralhunt_search` | **One keyword, every network** — merged and ranked, with per-network totals |
 | `viralhunt_best_time` | **When to post** — best weekday + hour per network from the posts that went viral there (365-day sample, hit rate, sample size, your time zone, optional niche keyword) |
 | `viralhunt_top_hashtags` | **Which hashtags** — top tags per network or across all, by engagement, posts or per-post; one tag's breakdown by network |
 | `viralhunt_trending_sounds` | **Which sound** — trending audio on TikTok, Instagram Reels and Douyin, cross-network sounds first, with the posts that used it |
 | `viralhunt_best_communities` | **Where to post** — best subreddits (peak per 1,000 members, timing, top posts, similar) and Bluesky custom feeds for a topic |
-| `viralhunt_targets` | List your **brands/projects** and the connected accounts you can post to |
-| `viralhunt_schedule` | **Publish now or schedule** a post (text + media) across your connected accounts |
-| `viralhunt_get_post` | Check a post's status + per-network permalinks |
-| `viralhunt_update_post` | Edit a still-scheduled post (body / media / networks / time) |
-| `viralhunt_cancel_post` | Cancel the not-yet-published targets of a scheduled post |
-| `viralhunt_list_templates` | Browse the **content template** library (on-brand layouts you fill) |
-| `viralhunt_get_template` | Get one template's full spec (html + css + variable manifest) to render |
+| `viralhunt_targets` | List your **brands/projects** and the connected accounts you can post to, with `needs_reconnect`, per-network `media_limits` and the projects linked in another language |
+| `viralhunt_schedule` | **Publish now, schedule, or leave a draft** (text + media, per-network copy, a first comment, or a `design` on a template the app renders when a person approves) |
+| `viralhunt_drafts` | **The drafts waiting** for a review and an approval, with their reviews |
+| `viralhunt_review_draft` | **Review a draft** — verdict, score, per-network warnings, a note (an agent as the team's checker) |
+| `viralhunt_approve_draft` | **Send a draft** (owner/admin token, with the user's yes), optionally with its translations |
+| `viralhunt_translate_post` | **The same post in another language** — the app adapts the copy and the template's texts for a linked project |
+| `viralhunt_edit_log` | **Learn from the edits** — what people changed in drafts after the agent left them |
+| `viralhunt_get_post` | Check a post's status + per-network results, permalinks and each network's own reason when it refused |
+| `viralhunt_sync_post` | Refresh statuses from the networks |
+| `viralhunt_update_post` | Edit a draft (anything, incl. the rendered `png`) or a still-scheduled post (body / media / networks / time) |
+| `viralhunt_cancel_post` | Cancel the not-yet-published targets of a scheduled post, or drop a draft |
+| `viralhunt_stats` | **What performed** — engagement of the published posts by network, by brand, top posts |
+| `viralhunt_quotes` / `viralhunt_mark_quote_used` | The **quotes base** for daily-quote series (public domain by default, author context, portraits) |
+| `viralhunt_recipes` / `viralhunt_recipe_ran` | **Standing orders** a person saved in the app: source, template, cadence; stamp a run |
+| `viralhunt_list_templates` | Browse the **content template** library (on-brand layouts you fill; favourites first) |
+| `viralhunt_get_template` | Get one template's full spec (html + css + variable manifest, what is `static` and what is `dynamic`, what it `suits`, the owner's `instructions`) to render |
 | `viralhunt_upsert_template` | **Author or edit a template** — editing a curated one clones it into your copy (owner/admin) |
 | `viralhunt_assign_template` | Assign a template to a project so its agents can use it (owner/admin) |
 | `viralhunt_board_context` | The team's **Editorial Board** in one call: members (with ids), columns, categories |
@@ -36,8 +47,22 @@ much to trust it:
 | `viralhunt_my_cards` | The cards assigned to you (when the token belongs to an agent member of the team) |
 | `viralhunt_card_comments` | Read or add comments on a card (notifies the assignee, mirrors to team chat) |
 
-Guardrails baked in: it won't post to the wrong brand, only schedules in the future, and is told not to
-repost fake news / copyrighted media / spam.
+Guardrails baked in: it won't post to the wrong brand, only schedules in the future, drafts by default
+unless the user asked to publish now, never uses another page's text or branded picture, checks each
+network's media ceilings, and is told not to repost fake news / copyrighted media / spam.
+
+## Changelog
+
+- **0.3.0 (2026-09-28)** — drafts and review (`viralhunt_drafts`, `viralhunt_review_draft`,
+  `viralhunt_approve_draft`, `viralhunt_edit_log`), translation into a linked project's language
+  (`viralhunt_translate_post`), `design` on a post and `png` on update, `viralhunt_search`,
+  `viralhunt_account`, `viralhunt_stats`, `viralhunt_quotes`, `viralhunt_recipes`, `viralhunt_sync_post`;
+  `author` and free-form `time_range` on trending; `media_limits`, `needs_reconnect` and language links on
+  targets; templates say what is static, dynamic and what they suit; honest post statuses with each
+  network's reason.
+- **0.2.x (2026-09-08)** — best time to post, top hashtags, trending sounds, best communities, the editorial
+  board; Reddit, Mastodon, Tumblr and Hacker News on trending; `growth_24h` documented.
+- **0.1.x (2026-08)** — trending, targets, publish/schedule, get, update, cancel, content templates.
 
 ## What ViralHunt the platform does (beyond this MCP)
 
