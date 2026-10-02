@@ -137,7 +137,8 @@ tool(server, "viralhunt_schedule",
     "news, copyrighted media or spam. Never use another page's text as the copy or its branded picture as the post's picture: the",
     "picture comes from the organization's templates (viralhunt_get_template), either rendered by you and passed in media, or passed",
     "as `design` with draft=true so the app renders it when a person approves. Returns {id, status, results, warnings, review_url}:",
-    "status processing|scheduled|draft|partial|failed; results keyed by account id carry each network's own reason when it refused.",
+    "status processing|scheduled|review|draft|partial|failed; results keyed by account id carry each network's own reason when it refused.",
+    "Two stages sit before sending: Drafts (being worked on) and Review (complete, dated, waiting for an owner or admin). Say which one the post is in.",
   ].join(" "),
   {
     project: z.string().optional().describe("Project name — REQUIRED if the org has more than one project."),
@@ -148,7 +149,7 @@ tool(server, "viralhunt_schedule",
     target_account_ids: z.array(z.number().int()).optional().describe("Exact account ids (from viralhunt_targets). Omit = all accounts in the project."),
     scheduled_at: z.string().optional().describe("ISO-8601 UTC, e.g. 2026-08-01T15:30:00Z. Omit = publish now (or, with draft, the tentative time is 'when approved')."),
     first_comment: z.string().optional().describe("Optional first comment (link-in-comments)."),
-    draft: z.boolean().optional().describe("true = save it in Drafts for a person to review and approve; nothing is sent. Use it unless the user explicitly asked to publish now."),
+    draft: z.boolean().optional().describe("true = a working copy in Drafts you still mean to edit (viralhunt_update_post, then viralhunt_submit_draft). Without it, a member or agent token lands the complete post in Review, where an owner or admin authorizes it; nothing is sent either way. An owner token publishes directly."),
     overrides: z.object({}).passthrough().optional().describe('Per-network (or per account id) copy or media: {"bluesky": {"body": "short version"}, "12": {"media": ["…"]}}. Bluesky takes 300 characters, X 280.'),
     card_id: z.number().int().optional().describe("The Editorial Board card this post comes from (optional)."),
     design: z.object({}).passthrough().optional().describe('The picture as a filled template instead of a rendered file: {"template": "<slug or id>", "format": "feed", "variables": {"text": "…", "highlight": "…", "image": "https://…", "caption": "…"}}. Needs draft=true when media is empty; the app renders it when a person approves.'),
@@ -162,18 +163,30 @@ tool(server, "viralhunt_schedule",
 
 // ── Drafts: the limbo before sending ──
 tool(server, "viralhunt_drafts",
-  "List the drafts waiting for a review and an approval (this project, or every project with all=true). Each carries body, media, targets, scheduled_at, overrides, card_id, submitted_via (api = from an agent), design, lang, translated_from_id and review {score, verdict, reviewed_at, entries[]}.",
+  "List the posts not yet sent (this project, or every project with all=true): stage 'draft' = being worked on, 'review' = complete and dated, waiting for an owner or admin. Each carries stage, body, media, targets, scheduled_at, overrides, card_id, submitted_via (api = from an agent), design, lang, translated_from_id and review {score, verdict, reviewed_at, entries[]}.",
   {
     project: z.string().optional().describe("Project name (default: the org's first project)."),
     project_id: z.number().int().optional(),
     all: z.boolean().optional().describe("true = every project of the organization."),
+    stage: z.enum(["draft", "review"]).optional().describe("One stage only (default: both)."),
   },
-  (a) => vh("/schedule.php", { query: { action: "drafts", project: a.project, project_id: a.project_id, all: a.all ? 1 : undefined } })
+  (a) => vh("/schedule.php", { query: { action: "drafts", project: a.project, project_id: a.project_id, all: a.all ? 1 : undefined, stage: a.stage } })
+);
+
+tool(server, "viralhunt_submit_draft",
+  "Move a draft to Review once it is complete (a body or media, and at least one account): it waits there for an owner or admin to authorize it. now=true clears the time (it goes out when authorized); scheduled_at sets one; neither keeps the draft's own. Nothing is sent.",
+  {
+    id: z.number().int().describe("The draft id."),
+    now: z.boolean().optional(),
+    scheduled_at: z.string().optional().describe("ISO-8601 UTC."),
+  },
+  (a) => vh("/schedule.php", { method: "POST", query: { action: "submit" }, body: { id: a.id, now: a.now ? 1 : undefined, scheduled_at: a.scheduled_at } })
 );
 
 tool(server, "viralhunt_review_draft",
   [
-    "Append your review to a draft: verdict ok|fix|block, a score 0-100, per-topic scores (tos_risk, fake_news, sensationalism, grammar),",
+    "Append your review to a post in Review: verdict ok|fix|block, a score 0-100, per-topic scores (tos_risk, fake_news, sensationalism, grammar),",
+    "`fix` sends the post back to Drafts with your note (the answer carries returned: true).",
     "one warning per issue with the network it concerns, and a short note on how to fix it. Judge each target network's terms (violence,",
     "health claims, politics, minors, copyright, spam), unverified claims (cross-check with viralhunt_search / trending rss), sensationalism,",
     "grammar. `block` only for what must not go out as it is. If the organization sends drafts by themselves on an OK review, an `ok` verdict",
