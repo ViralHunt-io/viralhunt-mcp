@@ -51,8 +51,6 @@ export type ViralHuntTool =
   | 'viralhunt_update_post'
   | 'viralhunt_upsert_template';
 
-  | 'viralhunt_edit_log';
-
 /** Where a post sits before it is sent: being worked on, or complete and waiting for an owner or admin. */
 export type PostStage = 'draft' | 'review';
 
