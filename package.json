@@ -1,14 +1,16 @@
 {
   "name": "viralhunt-mcp",
   "mcpName": "io.github.rodvan/viralhunt-mcp",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "description": "MCP server for ViralHunt.io: find trending/viral content across TikTok, Instagram, X, Facebook, Pinterest, Bluesky, Douyin, Reddit, Mastodon, Tumblr, Hacker News and news RSS; search one keyword on every network; learn the best time to post, top hashtags, trending sounds and the best communities; make on-brand images from the organization's templates; leave complete posts as drafts, review them, translate them into a linked project's language; and publish, schedule or edit posts on your connected social accounts.",
   "type": "module",
   "bin": {
     "viralhunt-mcp": "index.js"
   },
+  "types": "index.d.ts",
   "files": [
     "index.js",
+    "index.d.ts",
     "README.md"
   ],
   "engines": {
@@ -24,7 +26,18 @@
     "buzzsumo-alternative"
   ],
   "homepage": "https://viralhunt.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viralhunt-io/viralhunt-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/viralhunt-io/viralhunt-mcp/issues"
+  },
+  "author": "ViralHunt (https://viralhunt.io)",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
     "zod": "^3.23.8"
