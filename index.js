@@ -163,14 +163,29 @@ tool(server, "viralhunt_schedule",
 
 // ── Drafts: the limbo before sending ──
 tool(server, "viralhunt_drafts",
-  "List the posts not yet sent (this project, or every project with all=true): stage 'draft' = being worked on, 'review' = complete and dated, waiting for an owner or admin. Each carries stage, body, media, targets, scheduled_at, overrides, card_id, submitted_via (api = from an agent), design, lang, translated_from_id and review {score, verdict, reviewed_at, entries[]}.",
+  "List the posts not yet sent (this project, or every project with all=true): stage 'draft' = being worked on, 'review' = complete and dated, waiting for an owner or admin. Each carries stage, body, media, targets, scheduled_at, overrides, card_id, submitted_via (api = from an agent), design, lang, translated_from_id, review {score, verdict, reviewed_at, entries[]}, needs_review (no verdict on its current content), valid_verdict, content_hash and updated_at.",
   {
     project: z.string().optional().describe("Project name (default: the org's first project)."),
     project_id: z.number().int().optional(),
     all: z.boolean().optional().describe("true = every project of the organization."),
     stage: z.enum(["draft", "review"]).optional().describe("One stage only (default: both)."),
+    needs_review: z.boolean().optional().describe("true = only posts with no verdict on their current content (the reviewer's queue)."),
   },
-  (a) => vh("/schedule.php", { query: { action: "drafts", project: a.project, project_id: a.project_id, all: a.all ? 1 : undefined, stage: a.stage } })
+  (a) => vh("/schedule.php", { query: { action: "drafts", project: a.project, project_id: a.project_id, all: a.all ? 1 : undefined, stage: a.stage, needs_review: a.needs_review ? 1 : undefined } })
+);
+
+tool(server, "viralhunt_policy",
+  "The content rule a reviewer applies before any OK, kept on the platform so it changes without a release: what blocks a post (policy_* codes), what sends it back to Drafts (fix_* codes), the six scores (tos_risk, rights, fake_news, sensationalism, brand, grammar; 100 = clean) with the thresholds the server recalculates the verdict with, what changes per network, and the server rules an OK cannot bypass. Read it at the start of every review pass; never judge from memory.",
+  {},
+  () => vh("/policy.php")
+);
+
+tool(server, "viralhunt_review_queue",
+  "The reviewer's queue: posts in Review, every project, with no verdict on their current content (never reviewed, or edited after the last verdict). Same rows as viralhunt_drafts. Read viralhunt_policy first, then one viralhunt_review_draft per post.",
+  {
+    project_id: z.number().int().optional().describe("One project only (default: every project)."),
+  },
+  (a) => vh("/schedule.php", { query: { action: "drafts", stage: "review", all: a.project_id ? undefined : 1, project_id: a.project_id, needs_review: 1 } })
 );
 
 tool(server, "viralhunt_submit_draft",
@@ -185,12 +200,12 @@ tool(server, "viralhunt_submit_draft",
 
 tool(server, "viralhunt_review_draft",
   [
-    "Append your review to a post in Review: verdict ok|fix|block, a score 0-100, per-topic scores (tos_risk, fake_news, sensationalism, grammar),",
-    "`fix` sends the post back to Drafts with your note (the answer carries returned: true).",
-    "one warning per issue with the network it concerns, and a short note on how to fix it. Judge each target network's terms (violence,",
-    "health claims, politics, minors, copyright, spam), unverified claims (cross-check with viralhunt_search / trending rss), sensationalism,",
-    "grammar. `block` only for what must not go out as it is. If the organization sends drafts by themselves on an OK review, an `ok` verdict",
-    "SENDS the draft and the answer carries `sent`: give ok only when you would approve it yourself, and tell the user.",
+    "Append your review to a post in Review: verdict ok|fix|block, a score 0-100, per-topic scores (tos_risk, rights, fake_news, sensationalism, brand, grammar; 100 = clean),",
+    "one warning per issue with the policy's code (policy_* / fix_*), the network it concerns and the severity, and a short note on how to fix it, in the post's language.",
+    "Judge against viralhunt_policy (read it first), network by network; verify claims with viralhunt_search / trending rss. `fix` sends the post back to Drafts with your note",
+    "(returned: true). The server recalculates the verdict from your scores and warnings with the policy thresholds and keeps the more severe one (verdict, verdict_requested,",
+    "verdict_reason in the answer). An `ok` sends the post at its time only when the organization sends on OK AND this token may release (owner, admin, or 'their OK publishes' in Team);",
+    "the server refuses to send on a self review, a post with no time or under 15 minutes, or one edited after the review, and says why in sent.skipped. Report `sent` as it is.",
   ].join(" "),
   {
     id: z.number().int().describe("The draft id."),

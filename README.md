@@ -27,6 +27,8 @@ much to trust it:
 | `viralhunt_schedule` | **Publish now, schedule, or leave a draft** (text + media, per-network copy, a first comment, or a `design` on a template the app renders when a person approves) |
 | `viralhunt_drafts` | **The drafts waiting** for a review and an approval, with their reviews |
 | `viralhunt_review_draft` | **Review a draft** — verdict, score, per-network warnings, a note (an agent as the team's checker) |
+| `viralhunt_policy` | **The content rule** a reviewer applies before any OK: block and fix lists with codes, six scores and thresholds, per-network notes (read it first, every pass) |
+| `viralhunt_review_queue` | **What needs a review**: posts in Review with no verdict on their current content |
 | `viralhunt_approve_draft` | **Send a draft** (owner/admin token, with the user's yes), optionally with its translations |
 | `viralhunt_translate_post` | **The same post in another language** — the app adapts the copy and the template's texts for a linked project |
 | `viralhunt_edit_log` | **Learn from the edits** — what people changed in drafts after the agent left them |
@@ -53,6 +55,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.0 (2026-10-05)** — the reviewer job: `viralhunt_policy`, `viralhunt_review_queue`, `needs_review` on drafts; the server recalculates the verdict and names in `sent.skipped` the rule that kept an OK from sending.
 - **0.3.0 (2026-09-28)** — drafts and review (`viralhunt_drafts`, `viralhunt_review_draft`,
   `viralhunt_approve_draft`, `viralhunt_edit_log`), translation into a linked project's language
   (`viralhunt_translate_post`), `design` on a post and `png` on update, `viralhunt_search`,
