@@ -175,7 +175,7 @@ tool(server, "viralhunt_drafts",
 );
 
 tool(server, "viralhunt_policy",
-  "The content rule a reviewer applies before any OK, kept on the platform so it changes without a release: what blocks a post (policy_* codes), what sends it back to Drafts (fix_* codes), the six scores (tos_risk, rights, fake_news, sensationalism, brand, grammar; 100 = clean) with the thresholds the server recalculates the verdict with, what changes per network, and the server rules an OK cannot bypass. Read it at the start of every review pass; never judge from memory.",
+  "The content rule a reviewer applies before any OK, kept on the platform so it changes without a release: what blocks a post (policy_* codes), what sends it back to Drafts (fix_* codes), the six scores (tos_risk, rights, fake_news, sensationalism, brand, grammar; 100 = clean) with the thresholds the server recalculates the verdict with, the extra readings every review carries (risk10 1 safe to 10 breaks a network's terms, image_match, ai_written), what changes per network, and the server rules an OK cannot bypass. Read it at the start of every review pass; never judge from memory.",
   {},
   () => vh("/policy.php")
 );
@@ -186,6 +186,14 @@ tool(server, "viralhunt_review_queue",
     project_id: z.number().int().optional().describe("One project only (default: every project)."),
   },
   (a) => vh("/schedule.php", { query: { action: "drafts", stage: "review", all: a.project_id ? undefined : 1, project_id: a.project_id, needs_review: 1 } })
+);
+
+tool(server, "viralhunt_review_stats",
+  "Flags per collaborator (owner or admin token): for the last days (7 = week, 14 = fortnight, 30 = month), per person or agent who authored posts: reviews, ok / fix / block, flags (a fix or block, or any policy_* / fix_* warning), codes (how many of each rule, e.g. fix_doi), avg_risk10 and last_flag_at. The Team page shows the same table.",
+  {
+    days: z.number().int().optional().describe("7, 14 or 30 (default 30)."),
+  },
+  (a) => vh("/schedule.php", { query: { action: "review_stats", days: a.days } })
 );
 
 tool(server, "viralhunt_submit_draft",
@@ -200,7 +208,7 @@ tool(server, "viralhunt_submit_draft",
 
 tool(server, "viralhunt_review_draft",
   [
-    "Append your review to a post in Review: verdict ok|fix|block, a score 0-100, per-topic scores (tos_risk, rights, fake_news, sensationalism, brand, grammar; 100 = clean),",
+    "Append your review to a post in Review: verdict ok|fix|block, a score 0-100, per-topic scores (tos_risk, rights, fake_news, sensationalism, brand, grammar; 100 = clean) plus risk10 (1 safe to 10 breaks a network's terms), image_match and ai_written (0-100),",
     "one warning per issue with the policy's code (policy_* / fix_*), the network it concerns and the severity, and a short note on how to fix it, in the post's language.",
     "Judge against viralhunt_policy (read it first), network by network; verify claims with viralhunt_search / trending rss. `fix` sends the post back to Drafts with your note",
     "(returned: true). The server recalculates the verdict from your scores and warnings with the policy thresholds and keeps the more severe one (verdict, verdict_requested,",
@@ -211,7 +219,7 @@ tool(server, "viralhunt_review_draft",
     id: z.number().int().describe("The draft id."),
     verdict: z.enum(["ok", "fix", "block"]),
     score: z.number().int().min(0).max(100).optional(),
-    scores: z.object({}).passthrough().optional().describe('{"tos_risk": 90, "fake_news": 70, "sensationalism": 80, "grammar": 95}'),
+    scores: z.object({}).passthrough().optional().describe('{"tos_risk": 90, "fake_news": 70, "sensationalism": 80, "grammar": 95, "risk10": 3, "image_match": 85, "ai_written": 40}'),
     warnings: z.array(z.object({ code: z.string().optional(), network: z.string().optional(), text: z.string(), severity: z.enum(["info", "warn", "block"]).optional() })).optional(),
     note: z.string().optional().describe("How to fix it, and the source you verified against."),
   },

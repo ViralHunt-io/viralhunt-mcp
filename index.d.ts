@@ -40,6 +40,7 @@ export type ViralHuntTool =
   | 'viralhunt_recipes'
   | 'viralhunt_review_draft'
   | 'viralhunt_review_queue'
+  | 'viralhunt_review_stats'
   | 'viralhunt_schedule'
   | 'viralhunt_search'
   | 'viralhunt_stats'
