@@ -213,17 +213,19 @@ tool(server, "viralhunt_review_draft",
     "Judge against viralhunt_policy (read it first), network by network; verify claims with viralhunt_search / trending rss. `fix` sends the post back to Drafts with your note",
     "(returned: true). The server recalculates the verdict from your scores and warnings with the policy thresholds and keeps the more severe one (verdict, verdict_requested,",
     "verdict_reason in the answer). An `ok` sends the post at its time only when the organization sends on OK AND this token may release (owner, admin, or 'their OK publishes' in Team);",
-    "the server refuses to send on a self review, a post with no time or under 15 minutes, or one edited after the review, and says why in sent.skipped. Report `sent` as it is.",
+    "the server refuses to send on a self review (same USER, not token: the reviewer is its own agent member), a post with no time or under 15 minutes, or one edited after the review, and says why in sent.skipped. Report `sent` as it is.",
+    "Always pass content_hash from the row you read: if the post changed meanwhile the server answers 409 content_changed with the current hash and writes nothing; read it again.",
   ].join(" "),
   {
     id: z.number().int().describe("The draft id."),
     verdict: z.enum(["ok", "fix", "block"]),
+    content_hash: z.string().optional().describe("The content_hash of the drafts row when you read the post. Always send it."),
     score: z.number().int().min(0).max(100).optional(),
     scores: z.object({}).passthrough().optional().describe('{"tos_risk": 90, "fake_news": 70, "sensationalism": 80, "grammar": 95, "risk10": 3, "image_match": 85, "ai_written": 40}'),
     warnings: z.array(z.object({ code: z.string().optional(), network: z.string().optional(), text: z.string(), severity: z.enum(["info", "warn", "block"]).optional() })).optional(),
     note: z.string().optional().describe("How to fix it, and the source you verified against."),
   },
-  (a) => vh("/schedule.php", { method: "POST", query: { action: "review" }, body: { id: a.id, verdict: a.verdict, score: a.score, scores: a.scores, warnings: a.warnings, note: a.note } })
+  (a) => vh("/schedule.php", { method: "POST", query: { action: "review" }, body: { id: a.id, verdict: a.verdict, score: a.score, scores: a.scores, warnings: a.warnings, note: a.note, content_hash: a.content_hash } })
 );
 
 tool(server, "viralhunt_approve_draft",

@@ -56,6 +56,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.2 (2026-10-06)** — `content_hash` on `viralhunt_review_draft` (409 content_changed when the post moved under the reviewer); self review is by user, not token.
 - **1.1.1 (2026-10-06)** — the reviewer's four extra checks (picture against text, spelling, AI-written, facts with the DOI rule), `risk10` 1 to 10 on every review, `viralhunt_review_stats` (flags per collaborator).
 - **1.1.0 (2026-10-05)** — the reviewer job: `viralhunt_policy`, `viralhunt_review_queue`, `needs_review` on drafts; the server recalculates the verdict and names in `sent.skipped` the rule that kept an OK from sending.
 - **0.3.0 (2026-09-28)** — drafts and review (`viralhunt_drafts`, `viralhunt_review_draft`,
