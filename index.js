@@ -269,7 +269,7 @@ tool(server, "viralhunt_sync_post",
 // ── Check status ──
 tool(server, "viralhunt_get_post",
   [
-    "Get the current status and per-network results (incl. permalinks) of a post you created. Statuses: scheduled (queued), processing",
+    "Get the current status and per-network results (incl. permalinks) of a post you created. Also events[] (the delivery log: created, accepted by PostProxy, published with its link, refused with the reason, retried, canceled, reviewed, approved) and support_text, the text to hand the user when they ask what happened to a post. Statuses: scheduled (queued), processing",
     "(handed to the networks, or a target being retried), published (every target live), partial (some refused: each failed",
     "results[account].error carries the network's own words and error_message sums it up), failed, draft, canceled. The app retries a",
     "transient failure up to three times (results show retries, will_retry, retry_after); a final reason (dead connection, refused text,",
