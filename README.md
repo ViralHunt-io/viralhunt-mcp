@@ -29,6 +29,7 @@ much to trust it:
 | `viralhunt_review_draft` | **Review a draft** — verdict, score, per-network warnings, a note (an agent as the team's checker) |
 | `viralhunt_policy` | **The content rule** a reviewer applies before any OK: block and fix lists with codes, six scores and thresholds, per-network notes (read it first, every pass) |
 | `viralhunt_review_queue` | **What needs a review**: posts in Review with no verdict on their current content |
+| `viralhunt_calendar` | **The days worth a post**: international days and science/tech/space/health anniversaries with why, by window and category |
 | `viralhunt_news_categories` | **The news categories** with counts; pass one as `category` to `viralhunt_trending` (rss) |
 | `viralhunt_review_stats` | **Flags per collaborator** by week, fortnight or month: reviews, ok / fix / block, rule codes, average risk10 |
 | `viralhunt_approve_draft` | **Send a draft** (owner/admin token, with the user's yes), optionally with its translations |
@@ -57,6 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.5 (2026-10-07)** — `viralhunt_calendar`: the calendar base (international days and anniversaries, with why), mark_used.
 - **1.1.4 (2026-10-07)** — `viralhunt_news_categories` and `category` on `viralhunt_trending` (rss); unknown parameters are a 422 on the API.
 - **1.1.3 (2026-10-07)** — the policy describes the kinds (fact, meme, quote, opinion, promo): a meme or a quote never gets a source or DOI demand.
 - **1.1.2 (2026-10-06)** — `content_hash` on `viralhunt_review_draft` (409 content_changed when the post moved under the reviewer); self review is by user, not token.

@@ -336,6 +336,33 @@ tool(server, "viralhunt_stats",
 );
 
 // ── Quotes base ──
+tool(server, "viralhunt_calendar",
+  [
+    "The calendar base: the international days (UN, UNESCO, WHO) and the anniversaries of science, technology, space, health, the environment and civilization",
+    "in a window of days, each with `why` (what is celebrated or what happened, and why it matters: write the caption FROM it, never from memory),",
+    "kind (observance repeats every year; event, birth, death carry year and years_ago), category, origin, importance (3 = most brands can post about it,",
+    "2 = worth it inside its category, 1 = niche), image_url (a free Wikipedia thumbnail when there is one), source_url. Use days=7 or 31 to plan ahead;",
+    "post on the day. The vh-ephemeris template fits an event or a birth; the news frame fits an observance. mark_used=true with calendar_id records what you posted.",
+  ].join(" "),
+  {
+    date: z.string().optional().describe("YYYY-MM-DD or today (default today, UTC)."),
+    days: z.number().int().min(1).max(92).optional().describe("How many days from date (default 1)."),
+    category: z.string().optional().describe("One or several: science,technology,space,health,environment,humanity,civilization,education,culture,economy."),
+    kind: z.enum(["observance", "event", "birth", "death"]).optional(),
+    min_importance: z.number().int().min(1).max(3).optional().describe("3 = the big days only, 2 = worth a post (recommended), 1 = everything."),
+    lang: z.enum(["en", "es"]).optional(),
+    q: z.string().optional().describe("Keyword in the title, the text or the tags."),
+    unused: z.boolean().optional().describe("true = leave out what this organization already posted about this year."),
+    stats: z.boolean().optional().describe("true = how many rows per category and kind instead of the rows."),
+    mark_used: z.boolean().optional().describe("true with calendar_id = record that you posted about it this year."),
+    calendar_id: z.number().int().optional(),
+    note: z.string().optional(),
+  },
+  (a) => a.mark_used
+    ? vh("/calendar.php", { method: "POST", body: { action: "mark_used", calendar_id: a.calendar_id, note: a.note } })
+    : vh("/calendar.php", { query: { date: a.date, days: a.days, category: a.category, kind: a.kind, min_importance: a.min_importance, lang: a.lang, q: a.q, unused: a.unused ? 1 : undefined, stats: a.stats ? 1 : undefined } })
+);
+
 tool(server, "viralhunt_quotes",
   [
     "Quotes ranked by our popularity score, for daily-quote series: text, author, author_context (description, born, died), work,",

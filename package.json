@@ -1,7 +1,7 @@
 {
   "name": "viralhunt-mcp",
   "mcpName": "io.github.rodvan/viralhunt-mcp",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "MCP server for ViralHunt.io: find trending/viral content across TikTok, Instagram, X, Facebook, Pinterest, Bluesky, Douyin, Reddit, Mastodon, Tumblr, Hacker News and news RSS; search one keyword on every network; learn the best time to post, top hashtags, trending sounds and the best communities; make on-brand images from the organization's templates; leave complete posts as drafts, review them, translate them into a linked project's language; and publish, schedule or edit posts on your connected social accounts.",
   "type": "module",
   "bin": {
