@@ -175,7 +175,7 @@ tool(server, "viralhunt_drafts",
 );
 
 tool(server, "viralhunt_policy",
-  "The content rule a reviewer applies before any OK, kept on the platform so it changes without a release: what blocks a post (policy_* codes), what sends it back to Drafts (fix_* codes), the six scores (tos_risk, rights, fake_news, sensationalism, brand, grammar; 100 = clean) with the thresholds the server recalculates the verdict with, the extra readings every review carries (risk10 1 safe to 10 breaks a network's terms, image_match, ai_written), what changes per network, and the server rules an OK cannot bypass. Read it at the start of every review pass; never judge from memory.",
+  "The content rule a reviewer applies before any OK, kept on the platform so it changes without a release: what blocks a post (policy_* codes), what sends it back to Drafts (fix_* codes), the six scores (tos_risk, rights, fake_news, sensationalism, brand, grammar; 100 = clean) with the thresholds the server recalculates the verdict with, the extra readings every review carries (risk10 1 safe to 10 breaks a network's terms, image_match, ai_written), the kinds (fact, meme, quote, opinion, promo: a meme or a quote never gets a source or DOI demand), what changes per network, and the server rules an OK cannot bypass. Read it at the start of every review pass; never judge from memory.",
   {},
   () => vh("/policy.php")
 );
