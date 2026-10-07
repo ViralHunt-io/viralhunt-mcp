@@ -222,7 +222,7 @@ tool(server, "viralhunt_review_draft",
     "Judge against viralhunt_policy (read it first), network by network; verify claims with viralhunt_search / trending rss. `fix` sends the post back to Drafts with your note",
     "(returned: true). The server recalculates the verdict from your scores and warnings with the policy thresholds and keeps the more severe one (verdict, verdict_requested,",
     "verdict_reason in the answer). An `ok` sends the post at its time only when the organization sends on OK AND this token may release (owner, admin, or 'their OK publishes' in Team);",
-    "the server refuses to send on a self review (same USER, not token: the reviewer is its own agent member), a post with no time or under 15 minutes, one edited after the review, or one whose scores sit outside the policy's auto_send thresholds (risk10 > 5, fake_news < 70, image_match < 60: risk_threshold, a person decides), and says why in sent.skipped. Report `sent` as it is. Drafts rows carry project_lang: a post in another language is fix_language.",
+    "The note carries the fix (the corrected sentence, the exact link, the short version); say which problem decided the verdict. The server refuses to send on a self review (same USER, not token: the reviewer is its own agent member), a post with no time or under 15 minutes, one edited after the review, or one whose scores sit outside the policy's auto_send thresholds (risk10 > 5, fake_news < 70, image_match < 60: risk_threshold, a person decides), and says why in sent.skipped. Report `sent` as it is. Drafts rows carry project_lang: a post in another language is fix_language.",
     "Always pass content_hash from the row you read: if the post changed meanwhile the server answers 409 content_changed with the current hash and writes nothing; read it again.",
   ].join(" "),
   {
@@ -301,7 +301,8 @@ tool(server, "viralhunt_get_post",
 // ── Edit a scheduled post or a draft ──
 tool(server, "viralhunt_update_post",
   [
-    "Edit a post. A DRAFT can be changed freely (body, media, overrides, first_comment, targets, scheduled_at, design, and png: the",
+    "Edit a post. A DRAFT can be changed freely by its author, an owner or an admin (body, media, overrides, first_comment, targets, scheduled_at, design, and png: the",
+    "a reviewer marked 'Their OK publishes' may change only overrides (a per-account short copy) and kind on someone else's post);",
     "rendered picture of its design as a data:image/png;base64 URL, which becomes the post's first picture). A SCHEDULED post can be",
     "edited only while status is 'scheduled' and more than 5 min before publish. Only the fields you send change; the project cannot",
     "be changed. Check status with viralhunt_get_post first; on a 409 error re-fetch instead of retrying.",
