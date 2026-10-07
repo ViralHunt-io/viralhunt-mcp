@@ -79,13 +79,20 @@ tool(server, "viralhunt_trending",
     sort: z.string().optional().describe("viral (default), engagement, newest, oldest, plus per network: most_liked, most_viewed, most_commented, most_retweeted, most_reposted, most_saved, most_upvoted (reddit), most_boosted (mastodon), most_noted (tumblr), most_points (hackernews); rss: trending, engagement, growth, bluesky, mentions, coverage, hn, comments."),
     time_range: z.string().optional().describe("Time window on the post's own publish date: any number with a unit (24h, 7d, 30d, 2w, 3m, 1y), a bare number of days, or all (default 7d). An unknown value is a 422. Tumblr's corpus fills slowly: use 30d or all there."),
     keyword: z.string().optional().describe("Filter by keyword/niche (matched in title, text, hashtags or author)."),
+    category: z.string().optional().describe("rss only: ONE news category, a name or id from viralhunt_news_categories (exact name, case-insensitive; unknown = 422 with the valid names). Technology and Artificial Intelligence are two categories: for AI content call twice."),
     author: z.string().optional().describe("ONE page or account only (facebook page name, x handle or name, tiktok or instagram username; contains-match). 'The most viral posts of the page X in 2025' = source + author + time_range=1y."),
     subreddit: z.string().optional().describe("reddit only: restrict to one subreddit (with or without r/)."),
     min_engagement: z.number().int().min(0).optional().describe("Minimum engagement on the network's main metric."),
     per_page: z.number().int().min(1).max(100).optional().describe("How many results (max 100)."),
     page: z.number().int().min(1).optional().describe("Page number for more results."),
   },
-  (a) => vh("/trending.php", { query: { source: a.source, sort: a.sort || "viral", time_range: a.time_range || "7d", keyword: a.keyword, author: a.author, subreddit: a.subreddit, min_engagement: a.min_engagement, per_page: a.per_page || 20, page: a.page } })
+  (a) => vh("/trending.php", { query: { source: a.source, sort: a.sort || "viral", time_range: a.time_range || "7d", keyword: a.keyword, category: a.category, author: a.author, subreddit: a.subreddit, min_engagement: a.min_engagement, per_page: a.per_page || 20, page: a.page } })
+);
+
+tool(server, "viralhunt_news_categories",
+  "The categories of the news corpus (source rss), with how many feeds carry each and how many articles arrived in the last 7 and 30 days. Read it once before asking for news on a subject, then pass a name as category on viralhunt_trending (source rss). Not the Editorial Board categories. Technology and Artificial Intelligence are separate categories.",
+  {},
+  () => vh("/news-categories.php")
 );
 
 // ── Who is this key: plan, quota, credits ──
