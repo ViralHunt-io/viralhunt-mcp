@@ -58,6 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.9 (2026-10-07)** — `kind` on create and update (fact | meme | quote | opinion | promo): the reviewer applies only that kind's rules.
 - **1.1.8 (2026-10-07)** — `overrides[account]` takes `first_comment` and `thread` per account; Bluesky/Mastodon threads as a reply chain.
 - **1.1.7 (2026-10-07)** — `author_notes` on create and update: the source link for the reviewer, never published.
 - **1.1.6 (2026-10-07)** — the safety catch on a trusted reviewer's OK (risk_threshold), project_lang on drafts, review_stats for trusted reviewers.

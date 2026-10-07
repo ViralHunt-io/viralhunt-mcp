@@ -157,6 +157,7 @@ tool(server, "viralhunt_schedule",
     scheduled_at: z.string().optional().describe("ISO-8601 UTC, e.g. 2026-08-01T15:30:00Z. Omit = publish now (or, with draft, the tentative time is 'when approved')."),
     first_comment: z.string().optional().describe("Optional first comment (link-in-comments)."),
     author_notes: z.string().optional().describe("For the reviewer, never published: the source link, the picture's origin, what you verified. Put the source link HERE, never in the body (the networks cut the reach)."),
+    kind: z.enum(["fact", "meme", "quote", "opinion", "promo"]).optional().describe("What the post IS. The reviewer applies only that kind's rules (a meme is never asked for a source). A post from a card takes the card's category when omitted."),
     draft: z.boolean().optional().describe("true = a working copy in Drafts you still mean to edit (viralhunt_update_post, then viralhunt_submit_draft). Without it, a member or agent token lands the complete post in Review, where an owner or admin authorizes it; nothing is sent either way. An owner token publishes directly."),
     overrides: z.object({}).passthrough().optional().describe('Per network (or per account id), only what that account needs to differ: {"bluesky": {"body": "the 300-character version", "thread": [{"body": "part 2"}]}, "12": {"media": ["…"], "first_comment": "its own first comment"}}. body, media, first_comment, thread. X 280, Bluesky 300, Threads 500, Mastodon 500. A thread on Bluesky/Mastodon is a reply chain posted after the post is live.'),
     card_id: z.number().int().optional().describe("The Editorial Board card this post comes from (optional)."),
@@ -164,7 +165,7 @@ tool(server, "viralhunt_schedule",
   },
   (a) => vh("/schedule.php", { method: "POST", query: { action: "create" }, body: {
     project: a.project, project_id: a.project_id, body: a.body, media: a.media,
-    networks: a.networks, target_account_ids: a.target_account_ids, scheduled_at: a.scheduled_at, first_comment: a.first_comment, author_notes: a.author_notes,
+    networks: a.networks, target_account_ids: a.target_account_ids, scheduled_at: a.scheduled_at, first_comment: a.first_comment, author_notes: a.author_notes, kind: a.kind,
     draft: a.draft ? true : undefined, overrides: a.overrides, card_id: a.card_id, design: a.design,
   } })
 );
@@ -314,13 +315,14 @@ tool(server, "viralhunt_update_post",
     scheduled_at: z.string().optional().describe("New ISO-8601 UTC time (must be in the future)."),
     first_comment: z.string().optional().describe("Drafts: the first comment."),
     author_notes: z.string().optional().describe("Drafts: notes for the reviewer, never published (the source link goes here)."),
+    kind: z.enum(["fact", "meme", "quote", "opinion", "promo"]).optional().describe("Drafts: what the post is."),
     overrides: z.object({}).passthrough().optional().describe("Drafts: per network or per account id: body, media, first_comment, thread."),
     design: z.object({}).passthrough().optional().describe("Drafts: the filled template (see viralhunt_schedule)."),
     png: z.string().optional().describe("Drafts: data:image/png;base64,… of the rendered design; stored and made the post's first picture."),
   },
   (a) => vh("/schedule.php", { method: "POST", query: { action: "update" }, body: {
     id: a.id, body: a.body, media: a.media, networks: a.networks, target_account_ids: a.target_account_ids, scheduled_at: a.scheduled_at,
-    first_comment: a.first_comment, author_notes: a.author_notes, overrides: a.overrides, design: a.design, png: a.png,
+    first_comment: a.first_comment, author_notes: a.author_notes, kind: a.kind, overrides: a.overrides, design: a.design, png: a.png,
   } })
 );
 
