@@ -196,7 +196,7 @@ tool(server, "viralhunt_review_queue",
 );
 
 tool(server, "viralhunt_review_stats",
-  "Flags per collaborator (owner or admin token): for the last days (7 = week, 14 = fortnight, 30 = month), per person or agent who authored posts: reviews, ok / fix / block, flags (a fix or block, or any policy_* / fix_* warning), codes (how many of each rule, e.g. fix_doi), avg_risk10 and last_flag_at. The Team page shows the same table.",
+  "Flags per collaborator (owner, admin, or a reviewer marked 'Their OK publishes'): for the last days (7 = week, 14 = fortnight, 30 = month), per person or agent who authored posts: reviews, ok / fix / block, flags (a fix or block, or any policy_* / fix_* warning), codes (how many of each rule, e.g. fix_doi), avg_risk10 and last_flag_at. The Team page shows the same table.",
   {
     days: z.number().int().optional().describe("7, 14 or 30 (default 30)."),
   },
@@ -220,7 +220,7 @@ tool(server, "viralhunt_review_draft",
     "Judge against viralhunt_policy (read it first), network by network; verify claims with viralhunt_search / trending rss. `fix` sends the post back to Drafts with your note",
     "(returned: true). The server recalculates the verdict from your scores and warnings with the policy thresholds and keeps the more severe one (verdict, verdict_requested,",
     "verdict_reason in the answer). An `ok` sends the post at its time only when the organization sends on OK AND this token may release (owner, admin, or 'their OK publishes' in Team);",
-    "the server refuses to send on a self review (same USER, not token: the reviewer is its own agent member), a post with no time or under 15 minutes, or one edited after the review, and says why in sent.skipped. Report `sent` as it is.",
+    "the server refuses to send on a self review (same USER, not token: the reviewer is its own agent member), a post with no time or under 15 minutes, one edited after the review, or one whose scores sit outside the policy's auto_send thresholds (risk10 > 5, fake_news < 70, image_match < 60: risk_threshold, a person decides), and says why in sent.skipped. Report `sent` as it is. Drafts rows carry project_lang: a post in another language is fix_language.",
     "Always pass content_hash from the row you read: if the post changed meanwhile the server answers 409 content_changed with the current hash and writes nothing; read it again.",
   ].join(" "),
   {

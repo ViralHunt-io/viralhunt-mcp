@@ -58,6 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.6 (2026-10-07)** — the safety catch on a trusted reviewer's OK (risk_threshold), project_lang on drafts, review_stats for trusted reviewers.
 - **1.1.5 (2026-10-07)** — `viralhunt_calendar`: the calendar base (international days and anniversaries, with why), mark_used.
 - **1.1.4 (2026-10-07)** — `viralhunt_news_categories` and `category` on `viralhunt_trending` (rss); unknown parameters are a 422 on the API.
 - **1.1.3 (2026-10-07)** — the policy describes the kinds (fact, meme, quote, opinion, promo): a meme or a quote never gets a source or DOI demand.
