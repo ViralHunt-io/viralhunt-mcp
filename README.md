@@ -58,6 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.11 (2026-10-08)** — approve by a member token on its own graded post (when ticked on Team); review_stats carries avg_score, self_published, published_over_fix.
 - **1.1.10 (2026-10-07)** — the reviewer's edit boundary (overrides and kind only, when trusted); text_limit per account.
 - **1.1.9 (2026-10-07)** — `kind` on create and update (fact | meme | quote | opinion | promo): the reviewer applies only that kind's rules.
 - **1.1.8 (2026-10-07)** — `overrides[account]` takes `first_comment` and `thread` per account; Bluesky/Mastodon threads as a reply chain.
