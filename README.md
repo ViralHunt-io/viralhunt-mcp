@@ -5,7 +5,7 @@ all-in-one platform to **discover what's trending, curate it with your team, and
 A BuzzSumo alternative with a built-in cross-network scheduler and an API that AI agents can drive
 end to end.
 
-Get a free token: **https://viralhunt.io/claude** → create the free account (free forever, no card, 24 content queries a day), then Account → API Access. Full API
+Get a free token: **https://viralhunt.io/claude** → create the free account (free forever, no card, 24 content queries a day), then Account → API Access → Create access. Every token has a **permission group** (reader, writer, reviewer, publisher, full): a tool outside the group answers `403 insufficient_scope` naming what it lacks, and `viralhunt_account` shows the token its own group. Give an agent that writes a writer token and the one that reviews a reviewer token. Full API
 docs: **https://viralhunt.io/api**.
 
 ## What an agent can do through this MCP server
