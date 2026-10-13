@@ -461,7 +461,7 @@ tool(server, "viralhunt_get_template",
 tool(server, "viralhunt_upsert_template",
   "Create or edit a content template (layout HTML/CSS + variable manifest). Editing a curated/global template CLONES it into the org's own copy — the global is never modified. Every {{placeholder}} in the html must be declared in variables, or the call is rejected. Owners and admins, or a member/agent the owner ticked 'Creates templates' (they edit only the templates they created). A template is html, css and images, never code: scripts, iframes, forms, event handlers and javascript: URLs are removed and listed in `removed`; data:font/ and data:image/ are accepted. On update you may send only the fields that change.",
   {
-    action: z.enum(["create", "update"]).optional().describe("create (default) or update."),
+    action: z.enum(["create", "update", "archive"]).optional().describe("create (default), update (send only what changes) or archive (retire one of your organization's templates; id or slug_ref)."),
     id: z.number().int().optional().describe("On update: the template id to edit."),
     slug_ref: z.string().optional().describe("On update: the slug to edit, if you don't have the id."),
     slug: z.string().describe("Stable kebab-case id for the template, e.g. my-quote-card."),
