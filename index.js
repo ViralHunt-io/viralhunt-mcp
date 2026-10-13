@@ -159,7 +159,7 @@ tool(server, "viralhunt_schedule",
     first_comment: z.string().optional().describe("Optional first comment (link-in-comments)."),
     author_notes: z.string().optional().describe("For the reviewer, never published: the source link, the picture's origin, what you verified. Put the source link HERE, never in the body (the networks cut the reach)."),
     kind: z.enum(["fact", "meme", "quote", "opinion", "promo"]).optional().describe("What the post IS. The reviewer applies only that kind's rules (a meme is never asked for a source). A post from a card takes the card's category when omitted."),
-    draft: z.boolean().optional().describe("true = a working copy in Drafts you still mean to edit (viralhunt_update_post, then viralhunt_submit_draft). Without it, a member or agent token lands the complete post in Review, where an owner or admin authorizes it; nothing is sent either way. An owner token publishes directly."),
+    draft: z.boolean().optional().describe("true = a working copy in Drafts you still mean to edit (viralhunt_update_post, then viralhunt_submit_draft). Every draft is also an Editorial Board card (card_id in the answer) that moves with the post: Drafts, In review, Scheduled, Published. Without it, a member or agent token lands the complete post in Review, where an owner or admin authorizes it; nothing is sent either way. An owner token publishes directly."),
     overrides: z.object({}).passthrough().optional().describe('Per network (or per account id), only what that account needs to differ: {"bluesky": {"body": "the 300-character version", "thread": [{"body": "part 2"}]}, "12": {"media": ["…"], "first_comment": "its own first comment"}}. body, media, first_comment, thread. first_comment has three states: key absent = inherits the post\'s, "" = none on this account, text = its own (to remove one, send "", never drop the key). X 280, Bluesky 300, Threads 500, Mastodon 500. A thread on Bluesky/Mastodon is a reply chain posted after the post is live.'),
     card_id: z.number().int().optional().describe("The Editorial Board card this post comes from (optional)."),
     design: z.object({}).passthrough().optional().describe('The picture as a filled template instead of a rendered file: {"template": "<slug or id>", "format": "feed", "variables": {"text": "…", "highlight": "…", "image": "https://…", "caption": "…"}}. Needs draft=true when media is empty; the app renders it when a person approves.'),
@@ -303,7 +303,9 @@ tool(server, "viralhunt_get_post",
 tool(server, "viralhunt_update_post",
   [
     "Edit a post. A DRAFT can be changed freely by its author, an owner or an admin (body, media, overrides, first_comment, targets, scheduled_at, design, and png: the",
-    "a reviewer marked 'Their OK publishes' may change only overrides (a per-account short copy) and kind on someone else's post).",
+    "a reviewer marked 'Their OK publishes' may change only overrides (a per-account short copy), kind, and the texts inside the image",
+    "(design_fields {variable key: text}, never a picture variable or caption; with its png) on someone else's post). design_fields works on",
+    "posts made on a template only (a flat picture answers no_design); without png the old render leaves (needs_png + render in the answer).",
     "overrides is MERGED per account: send only the accounts you change, a key set to null removes that account's copy, overrides_replace: true replaces the whole map;",
     "rendered picture of its design as a data:image/png;base64 URL, which becomes the post's first picture). A SCHEDULED post can be",
     "edited only while status is 'scheduled' and more than 5 min before publish. Only the fields you send change; the project cannot",
@@ -322,10 +324,12 @@ tool(server, "viralhunt_update_post",
     overrides: z.object({}).passthrough().optional().describe("Drafts: per network or per account id: body, media, first_comment, thread."),
     design: z.object({}).passthrough().optional().describe("Drafts: the filled template (see viralhunt_schedule)."),
     png: z.string().optional().describe("Drafts: data:image/png;base64,… of the rendered design; stored and made the post's first picture."),
+    design_fields: z.object({}).passthrough().optional().describe("Drafts made on a template: {variable key: corrected text} for the texts inside the image (text variables only, never caption). Send the new png with it when you can render."),
   },
   (a) => vh("/schedule.php", { method: "POST", query: { action: "update" }, body: {
     id: a.id, body: a.body, media: a.media, networks: a.networks, target_account_ids: a.target_account_ids, scheduled_at: a.scheduled_at,
     first_comment: a.first_comment, author_notes: a.author_notes, kind: a.kind, overrides: a.overrides, design: a.design, png: a.png,
+    design_fields: a.design_fields,
   } })
 );
 
@@ -455,7 +459,7 @@ tool(server, "viralhunt_get_template",
 
 // ── Content templates: author or edit one ──
 tool(server, "viralhunt_upsert_template",
-  "Create or edit a content template (layout HTML/CSS + variable manifest). Editing a curated/global template CLONES it into the org's own copy — the global is never modified. Every {{placeholder}} in the html must be declared in variables, or the call is rejected. Owner/admin only. On update you may send only the fields that change.",
+  "Create or edit a content template (layout HTML/CSS + variable manifest). Editing a curated/global template CLONES it into the org's own copy — the global is never modified. Every {{placeholder}} in the html must be declared in variables, or the call is rejected. Owners and admins, or a member/agent the owner ticked 'Creates templates' (they edit only the templates they created). A template is html, css and images, never code: scripts, iframes, forms, event handlers and javascript: URLs are removed and listed in `removed`; data:font/ and data:image/ are accepted. On update you may send only the fields that change.",
   {
     action: z.enum(["create", "update"]).optional().describe("create (default) or update."),
     id: z.number().int().optional().describe("On update: the template id to edit."),
