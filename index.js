@@ -437,8 +437,11 @@ tool(server, "viralhunt_list_templates",
     assigned: z.boolean().optional().describe("true = only the templates assigned to project_id."),
     q: z.string().optional().describe("Search name/description."),
     favorites: z.boolean().optional().describe("true = only the templates the brand starred. Favourites come first in every list: prefer them when several fit."),
+    scope: z.enum(["org", "global"]).optional().describe("org = only the organization's own templates (they also come first in every list), global = only the library."),
+    per_page: z.number().int().min(1).max(100).optional().describe("Page size (default 20). The answer's meta says total and has_more."),
+    page: z.number().int().min(1).optional(),
   },
-  (a) => vh("/templates.php", { query: { category: a.category, media_type: a.media_type, network: a.network, q: a.q, assigned: a.assigned ? 1 : undefined, project_id: a.project_id, favorites: a.favorites ? 1 : undefined } })
+  (a) => vh("/templates.php", { query: { category: a.category, media_type: a.media_type, network: a.network, q: a.q, assigned: a.assigned ? 1 : undefined, project_id: a.project_id, favorites: a.favorites ? 1 : undefined, scope: a.scope, per_page: a.per_page, page: a.page } })
 );
 
 // ── Content templates: the full layout to render ──

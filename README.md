@@ -58,7 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
-- **1.1.16 (2026-10-13)** — `viralhunt_upsert_template` takes `action: archive`; update works whether the action comes in the body or the URL.
+- **1.1.16 (2026-10-13)** — `viralhunt_upsert_template` takes `action: archive`; update works whether the action comes in the body or the URL; `viralhunt_list_templates` takes `scope`, `per_page`, `page` and lists the organization's own templates first.
 - **1.1.15 (2026-10-13)** — every draft is an Editorial Board card (`card_id` on create) that moves with the post; `design_fields` on update fixes the texts inside a designed image (a trusted reviewer too); template authors without admin ("Creates templates" on Team); templates never carry code (`removed` in the answer).
 - **1.1.11 (2026-10-08)** — approve by a member token on its own graded post (when ticked on Team); review_stats carries avg_score, self_published, published_over_fix.
 - **1.1.10 (2026-10-07)** — the reviewer's edit boundary (overrides and kind only, when trusted); text_limit per account.
