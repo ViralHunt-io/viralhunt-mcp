@@ -33,7 +33,8 @@ async function vh(path, { method = "GET", query = null, body = null } = {}) {
     const qs = new URLSearchParams(Object.entries(query).filter(([, v]) => v !== undefined && v !== null && v !== "")).toString();
     if (qs) url += (url.includes("?") ? "&" : "?") + qs;
   }
-  const opts = { method, headers: { Authorization: `Bearer ${API_KEY}`, Accept: "application/json" } };
+  // X-VH-Client: the server's request log says which client made the call (the free-plan usage report reads it)
+  const opts = { method, headers: { Authorization: `Bearer ${API_KEY}`, Accept: "application/json", "X-VH-Client": `viralhunt-mcp/${PKG.version}` } };
   if (body !== null) { opts.headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(body); }
 
   const res = await fetch(url, opts);
