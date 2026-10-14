@@ -58,6 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.18 (2026-10-14)** — `design` is always sent for a template-made picture (and `viralhunt_update_draft` repairs a PNG-only post with it): the app can then edit the image.
 - **1.1.17 (2026-10-14)** — `viralhunt_trending` takes `sort: most_commented` on every network that counts comments (tiktok new; facebook and pinterest map it to most_comments, x, bluesky and mastodon to most_replied).
 - **1.1.16 (2026-10-13)** — `viralhunt_upsert_template` takes `action: archive`; update works whether the action comes in the body or the URL; `viralhunt_list_templates` takes `scope`, `per_page`, `page` and lists the organization's own templates first.
 - **1.1.15 (2026-10-13)** — every draft is an Editorial Board card (`card_id` on create) that moves with the post; `design_fields` on update fixes the texts inside a designed image (a trusted reviewer too); template authors without admin ("Creates templates" on Team); templates never carry code (`removed` in the answer).
