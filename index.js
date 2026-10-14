@@ -77,7 +77,7 @@ tool(server, "viralhunt_trending",
   ].join(" "),
   {
     source: z.enum(["tiktok", "instagram", "x", "facebook", "pinterest", "bluesky", "douyin", "reddit", "mastodon", "tumblr", "hackernews", "rss"]).describe("Which network to pull trending from."),
-    sort: z.string().optional().describe("viral (default), engagement, newest, oldest, plus per network: most_liked, most_viewed, most_commented, most_retweeted, most_reposted, most_saved, most_upvoted (reddit), most_boosted (mastodon), most_noted (tumblr), most_points (hackernews); rss: trending, engagement, growth, bluesky, mentions, coverage, hn, comments."),
+    sort: z.string().optional().describe("viral (default), engagement, newest, oldest, plus per network: most_liked, most_viewed, most_commented (accepted on every network that counts comments: the threads to comment in), most_retweeted, most_reposted, most_saved, most_upvoted (reddit), most_boosted (mastodon), most_noted (tumblr), most_points (hackernews); rss: trending, engagement, growth, bluesky, mentions, coverage, hn, comments."),
     time_range: z.string().optional().describe("Time window on the post's own publish date: any number with a unit (24h, 7d, 30d, 2w, 3m, 1y), a bare number of days, or all (default 7d). An unknown value is a 422. Tumblr's corpus fills slowly: use 30d or all there."),
     keyword: z.string().optional().describe("Filter by keyword/niche (matched in title, text, hashtags or author)."),
     category: z.string().optional().describe("rss only: ONE news category, a name or id from viralhunt_news_categories (exact name, case-insensitive; unknown = 422 with the valid names). Technology and Artificial Intelligence are two categories: for AI content call twice."),
