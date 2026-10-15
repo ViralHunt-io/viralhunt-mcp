@@ -436,6 +436,59 @@ tool(server, "viralhunt_recipe_ran",
   (a) => vh("/recipes.php", { method: "POST", body: { action: "ran", recipe_id: a.recipe_id, note: a.note } })
 );
 
+// ── Brand watch: keywords, the discussions heating up, alerts, webhook ──
+tool(server, "viralhunt_brand_status",
+  "Every brand (project) of the organization and whether it is being watched: keywords count, category, webhook set, alerts in the last 7 days, and per network when the extension (or the Reddit cron) last searched its keywords (last_run, never_run, found). keywords: 0 = not watched, offer to set them; never_run with an old last_run = the always-on machine is off, tell the owner.",
+  { project_id: z.number().int().optional().describe("One brand only (default: all).") },
+  (a) => vh("/brand.php", { query: { action: "status", project_id: a.project_id } })
+);
+tool(server, "viralhunt_brand_keywords",
+  "Read a brand's keywords (what the always-on extension searches on X, Quora, Pinterest, Instagram, TikTok, Facebook, and the server on Reddit), or REPLACE the list (owner/admin token): keywords = product names, ingredients, the problems its buyers search for, #hashtags; up to 40; every keyword is machine time on every network. The answer carries the sweep state per network.",
+  {
+    project_id: z.number().int().describe("The brand (project)."),
+    keywords: z.array(z.string()).optional().describe("Send to REPLACE the whole list (owner/admin). Omit to read."),
+    networks: z.array(z.string()).optional().describe("With keywords: x, quora, pinterest, reddit, instagram, tiktok, facebook (default: the server's set)."),
+    category: z.string().optional().describe("The brand's niche, e.g. Hair care."),
+  },
+  (a) => (a.keywords || a.category !== undefined)
+    ? vh("/brand.php", { method: "POST", body: { action: "keywords", project_id: a.project_id, keywords: a.keywords, networks: a.networks, category: a.category } })
+    : vh("/brand.php", { query: { action: "keywords", project_id: a.project_id } })
+);
+tool(server, "viralhunt_brand_hot",
+  "The discussions about a brand heating up RIGHT NOW: posts of the last window that mention one of its keywords and whose comments grew by delta in the last hours (or were born loud), each with title, url, author, comments_from/to, delta, hours, alerted_at. The answer to 'where should I comment today': hand the user the biggest deltas with their links and a proposed comment. Never post the comment yourself.",
+  {
+    project_id: z.number().int(),
+    hours: z.number().int().optional().describe("The span the comments grew in (default 8)."),
+    window: z.number().int().optional().describe("How far back a post may be, in hours (default 24)."),
+    min_delta: z.number().int().optional().describe("Minimum comments gained (default 10)."),
+    networks: z.array(z.string()).optional().describe("reddit, quora, x, instagram, tiktok, bluesky (default: all)."),
+  },
+  (a) => vh("/brand.php", { query: { action: "hot", project_id: a.project_id, hours: a.hours, window: a.window, min_delta: a.min_delta, networks: a.networks ? a.networks.join(",") : undefined } })
+);
+tool(server, "viralhunt_brand_alerts",
+  "What a brand was alerted about (each thread once), newest first; or, with mark_read_ids, mark alerts as taken so unread=true shows only what is left. Poll with since = your last read every 10 to 30 minutes, or set a webhook with viralhunt_brand_webhook.",
+  {
+    project_id: z.number().int(),
+    since: z.string().optional().describe("ISO 8601: only alerts after this."),
+    unread: z.boolean().optional().describe("true = only alerts not yet marked read."),
+    limit: z.number().int().optional(),
+    mark_read_ids: z.array(z.number().int()).optional().describe("Mark these alert ids as taken (a POST instead of the list)."),
+  },
+  (a) => a.mark_read_ids && a.mark_read_ids.length
+    ? vh("/brand.php", { method: "POST", body: { action: "alerts_read", project_id: a.project_id, ids: a.mark_read_ids } })
+    : vh("/brand.php", { query: { action: "alerts", project_id: a.project_id, since: a.since, unread: a.unread ? 1 : undefined, limit: a.limit } })
+);
+tool(server, "viralhunt_brand_webhook",
+  "Read, set or clear the webhook where a brand's alerts are POSTed the minute the cron writes them (owner/admin to change it): JSON body {event: brand.alerts, project, alerts[], radar_url}, header X-VH-Signature = sha256=<hex HMAC-SHA256 of the raw body with the secret returned here>. Answer 2xx within 8 s; no retry (alerts stay readable). url null clears it.",
+  {
+    project_id: z.number().int(),
+    url: z.string().nullable().optional().describe("https URL on a public host to set; null to clear; omit to read."),
+  },
+  (a) => a.url !== undefined
+    ? vh("/brand.php", { method: "POST", body: { action: "webhook", project_id: a.project_id, url: a.url } })
+    : vh("/brand.php", { query: { action: "webhook", project_id: a.project_id } })
+);
+
 // ── Content templates: browse the library ──
 tool(server, "viralhunt_list_templates",
   "List ViralHunt content templates (layouts you fill and render yourself). Lean by design — no html/css — so use viralhunt_get_template for the one you'll actually render.",
