@@ -161,27 +161,30 @@ tool(server, "viralhunt_schedule",
     kind: z.enum(["fact", "meme", "quote", "opinion", "promo"]).optional().describe("What the post IS. The reviewer applies only that kind's rules (a meme is never asked for a source). A post from a card takes the card's category when omitted."),
     draft: z.boolean().optional().describe("true = a working copy in Drafts you still mean to edit (viralhunt_update_post, then viralhunt_submit_draft). Every draft is also an Editorial Board card (card_id in the answer) that moves with the post: Drafts, In review, Scheduled, Published. Without it, a member or agent token lands the complete post in Review, where an owner or admin authorizes it; nothing is sent either way. An owner token publishes directly."),
     overrides: z.object({}).passthrough().optional().describe('Per network (or per account id), only what that account needs to differ: {"bluesky": {"body": "the 300-character version", "thread": [{"body": "part 2"}]}, "12": {"media": ["…"], "first_comment": "its own first comment"}}. body, media, first_comment, thread. first_comment has three states: key absent = inherits the post\'s, "" = none on this account, text = its own (to remove one, send "", never drop the key). X 280, Bluesky 300, Threads 500, Mastodon 500. A thread on Bluesky/Mastodon is a reply chain posted after the post is live.'),
+    stage: z.enum(["draft", "review"]).optional().describe("Where the post lands, in one word: draft = a working copy (same as draft: true), review = complete and waiting for an owner or admin, even from a token that could send."),
+    assigned_to: z.number().int().optional().describe("The member who takes this post over (an id from viralhunt_members; agents count): its board card is assigned to them and they get the notification. Also on viralhunt_update_post."),
     card_id: z.number().int().optional().describe("The Editorial Board card this post comes from (optional)."),
     design: z.object({}).passthrough().optional().describe('ALWAYS when the picture was made from a ViralHunt template, even if you also rendered and uploaded the PNG (a PNG alone cannot be edited in the app; the design opens the editor on that template): {"template": "<slug or id>", "format": "feed", "variables": {"text": "…", "highlight": "…", "image": "https://…", "caption": "…"}}. Needs draft=true when media is empty; the app renders it when a person approves.'),
   },
   (a) => vh("/schedule.php", { method: "POST", query: { action: "create" }, body: {
     project: a.project, project_id: a.project_id, body: a.body, media: a.media,
     networks: a.networks, target_account_ids: a.target_account_ids, scheduled_at: a.scheduled_at, first_comment: a.first_comment, author_notes: a.author_notes, kind: a.kind,
-    draft: a.draft ? true : undefined, overrides: a.overrides, card_id: a.card_id, design: a.design,
+    draft: a.draft ? true : undefined, stage: a.stage, assigned_to: a.assigned_to, overrides: a.overrides, card_id: a.card_id, design: a.design,
   } })
 );
 
 // ── Drafts: the limbo before sending ──
 tool(server, "viralhunt_drafts",
-  "List the posts not yet sent (this project, or every project with all=true): stage 'draft' = being worked on, 'review' = complete and dated, waiting for an owner or admin. Each carries stage, body, media, targets, scheduled_at, overrides, card_id, submitted_via (api = from an agent), design, lang, translated_from_id, review {score, verdict, reviewed_at, entries[]}, needs_review (no verdict on its current content), valid_verdict, content_hash and updated_at.",
+  "List the posts not yet sent (this project, or every project with all=true): stage 'draft' = being worked on, 'review' = complete and dated, waiting for an owner or admin. Each carries stage, body, media, targets, scheduled_at, overrides, card_id, submitted_via (api = from an agent), design, lang, translated_from_id, assigned_to and assigned_to_name (the member it is assigned to), review {score, verdict, reviewed_at, entries[]}, needs_review (no verdict on its current content), valid_verdict, content_hash and updated_at.",
   {
     project: z.string().optional().describe("Project name (default: the org's first project)."),
     project_id: z.number().int().optional(),
     all: z.boolean().optional().describe("true = every project of the organization."),
     stage: z.enum(["draft", "review"]).optional().describe("One stage only (default: both)."),
     needs_review: z.boolean().optional().describe("true = only posts with no verdict on their current content (the reviewer's queue)."),
+    assigned_to: z.number().int().optional().describe("Only the posts assigned to this member (a user id from viralhunt_members)."),
   },
-  (a) => vh("/schedule.php", { query: { action: "drafts", project: a.project, project_id: a.project_id, all: a.all ? 1 : undefined, stage: a.stage, needs_review: a.needs_review ? 1 : undefined } })
+  (a) => vh("/schedule.php", { query: { action: "drafts", project: a.project, project_id: a.project_id, all: a.all ? 1 : undefined, stage: a.stage, needs_review: a.needs_review ? 1 : undefined, assigned_to: a.assigned_to } })
 );
 
 tool(server, "viralhunt_policy",
@@ -293,7 +296,9 @@ tool(server, "viralhunt_get_post",
     "(handed to the networks, or a target being retried), published (every target live), partial (some refused: each failed",
     "results[account].error carries the network's own words and error_message sums it up), failed, draft, canceled. The app retries a",
     "transient failure up to three times (results show retries, will_retry, retry_after); a final reason (dead connection, refused text,",
-    "oversized video) is not retried: tell the user what to fix. On a draft with a design the answer also carries render {html, css, format}.",
+    "oversized video) is not retried: tell the user what to fix. The post carries the same fields as a viralhunt_drafts row whatever its status:",
+    "stage, targets, media, overrides (what each account really sends: read it before an OK), thread, design (and render {html, css, format} on a",
+    "draft or a post in review), card_id, kind, author_notes, lang, assigned_to, review {score, verdict, entries[]}, content_hash, needs_review.",
   ].join(" "),
   { id: z.number().int().describe("The post id returned by viralhunt_schedule.") },
   (a) => vh("/schedule.php", { query: { action: "get", id: a.id } })
@@ -325,11 +330,12 @@ tool(server, "viralhunt_update_post",
     design: z.object({}).passthrough().optional().describe("The filled template of this post (see viralhunt_schedule): send it to repair a post that went out with a PNG only, so its image becomes editable."),
     png: z.string().optional().describe("Drafts: data:image/png;base64,… of the rendered design; stored and made the post's first picture."),
     design_fields: z.object({}).passthrough().optional().describe("Drafts made on a template: {variable key: corrected text} for the texts inside the image (text variables only, never caption). Send the new png with it when you can render."),
+    assigned_to: z.number().int().nullable().optional().describe("Drafts and posts in review: the member who takes it over (a user id from viralhunt_members; agents count); null unassigns. Their board card, their notification. A trusted reviewer may assign on someone else's post. The answer carries the stage read back after the edit."),
   },
   (a) => vh("/schedule.php", { method: "POST", query: { action: "update" }, body: {
     id: a.id, body: a.body, media: a.media, networks: a.networks, target_account_ids: a.target_account_ids, scheduled_at: a.scheduled_at,
     first_comment: a.first_comment, author_notes: a.author_notes, kind: a.kind, overrides: a.overrides, design: a.design, png: a.png,
-    design_fields: a.design_fields,
+    design_fields: a.design_fields, assigned_to: a.assigned_to,
   } })
 );
 
@@ -452,17 +458,22 @@ tool(server, "viralhunt_get_template",
     "`dynamic` (the variables you fill: the picture, the headline, the caption that is the post body), what it `suits` (news, photo, quote,",
     "number, tip, on_this_day, meme, any) and the owner's `instructions` (they override any general rule). Fill every dynamic {{variable}},",
     "then render with headless Chrome at the chosen format's size and WAIT for [data-vh-ready='1'] before screenshotting .vh-card.",
+    "With preview=true the answer is instead preview {document, html, css, format, variables}: a complete page with the example values (or `variables`)",
+    "filled and the organization's design baked in, to open in a browser or render, so a template is seen before any post is made.",
   ].join(" "),
   {
     slug: z.string().optional().describe("Template slug, e.g. vh-image-card."),
     id: z.number().int().optional().describe("Template id — alternative to slug."),
+    preview: z.boolean().optional().describe("true = how it looks: preview.document is a full HTML page with the example values filled (yours with `variables`)."),
+    variables: z.object({}).passthrough().optional().describe('With preview: your own values, {"text": "…", "highlight": "…"}; the rest take the manifest examples.'),
+    format: z.string().optional().describe("With preview: feed (default), story, square…"),
   },
-  (a) => vh("/templates.php", { query: { slug: a.slug, id: a.id } })
+  (a) => vh("/templates.php", { query: { slug: a.slug, id: a.id, preview: a.preview ? 1 : undefined, variables: a.variables ? JSON.stringify(a.variables) : undefined, format: a.format } })
 );
 
 // ── Content templates: author or edit one ──
 tool(server, "viralhunt_upsert_template",
-  "Create or edit a content template (layout HTML/CSS + variable manifest). Editing a curated/global template CLONES it into the org's own copy — the global is never modified. Every {{placeholder}} in the html must be declared in variables, or the call is rejected. Owners and admins, or a member/agent the owner ticked 'Creates templates' (they edit only the templates they created). A template is html, css and images, never code: scripts, iframes, forms, event handlers and javascript: URLs are removed and listed in `removed`; data:font/ and data:image/ are accepted. On update you may send only the fields that change.",
+  "Create or edit a content template (layout HTML/CSS + variable manifest). Editing a curated/global template CLONES it into the org's own copy — the global is never modified. Every {{placeholder}} in the html must be declared in variables, or the call is rejected. Owners and admins, or a member/agent the owner ticked 'Creates templates' (they edit only the templates they created). A template is html, css and images, never code: scripts, iframes, forms, event handlers and javascript: URLs are removed and listed in `removed`; data:font/ and data:image/ are accepted. Coloured words and a headline that fits need no script: put data-highlight=\"{{highlight}}\" on the headline (the listed words get <span class=\"hl\">, your css styles .hl), data-fit=\"28\" (or data-fit-lines=\"4\") on a block whose text must shrink to fit, and the platform appends its runtime (runtime_added: true), which also sets data-vh-ready. On update you may send only the fields that change. Then viralhunt_get_template with preview=true shows how it came out.",
   {
     action: z.enum(["create", "update", "archive"]).optional().describe("create (default), update (send only what changes) or archive (retire one of your organization's templates; id or slug_ref)."),
     id: z.number().int().optional().describe("On update: the template id to edit."),
