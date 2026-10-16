@@ -449,8 +449,11 @@ tool(server, "viralhunt_brand_keywords",
     keywords: z.array(z.string()).optional().describe("Send to REPLACE the whole list (owner/admin). Omit to read."),
     networks: z.array(z.string()).optional().describe("With keywords: x, quora, pinterest, reddit, instagram, tiktok, facebook (default: the server's set)."),
     category: z.string().optional().describe("The brand's niche, e.g. Hair care."),
+    run: z.boolean().optional().describe("true = 'search now' (owner/admin): every keyword of the brand is marked asked; the always-on machine picks them up within five minutes, Reddit within 30. The answer's machine.extension_alive says whether anything will actually run."),
   },
-  (a) => (a.keywords || a.category !== undefined)
+  (a) => a.run
+    ? vh("/brand.php", { method: "POST", body: { action: "run", project_id: a.project_id } })
+    : (a.keywords || a.category !== undefined)
     ? vh("/brand.php", { method: "POST", body: { action: "keywords", project_id: a.project_id, keywords: a.keywords, networks: a.networks, category: a.category } })
     : vh("/brand.php", { query: { action: "keywords", project_id: a.project_id } })
 );

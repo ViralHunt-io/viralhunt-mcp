@@ -58,6 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.22 (2026-10-15)** — `viralhunt_brand_keywords` takes `run: true` ("search now"); `viralhunt_brand_status` carries `machine` (is the always-on machine alive).
 - **1.1.21 (2026-10-15)** — Brand watch: `viralhunt_brand_status`, `viralhunt_brand_keywords`, `viralhunt_brand_hot` (the discussions heating up right now, with links), `viralhunt_brand_alerts`, `viralhunt_brand_webhook` (signed deliveries to the brand's own agent).
 - **1.1.20 (2026-10-15)** — `viralhunt_translate_post` describes what comes back (`shortened`, `overrides`, no em dashes) and the one-brand-two-languages pattern.
 - **1.1.19 (2026-10-14)** — `viralhunt_schedule` takes `stage` and `assigned_to`; `viralhunt_update_post` takes `assigned_to` and answers the stage after the edit; `viralhunt_drafts` filters by `assigned_to`; `viralhunt_get_post` carries the full drafts shape (overrides, design, render…); `viralhunt_get_template` with `preview` shows a template before any post; a too-long text answers `text_too_long` instead of a 500.
