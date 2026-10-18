@@ -678,7 +678,8 @@ tool(server, "viralhunt_create_card",
     description: z.string().optional(),
     priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
     due_date: z.string().optional().describe("YYYY-MM-DD."),
-    assigned_to_user_id: z.number().int().optional().describe("A member id from viralhunt_board_context."),
+    assigned_to: z.union([z.number().int(), z.string()]).optional().describe("Who takes the card: a member id from viralhunt_board_context, the member's name as the Team page shows it, or their email. The answer carries assigned_to_user_id and assigned_to_name read back from the card: trust those."),
+    assigned_to_user_id: z.number().int().optional().describe("Same as assigned_to, by id."),
     category_id: z.number().int().optional(),
     card_type: z.string().optional().describe("Post, Note, Article, Video… (the org's card types)."),
     board_column_id: z.number().int().optional().describe("Target column (default: the board's default column)."),
@@ -697,6 +698,33 @@ tool(server, "viralhunt_move_card",
     position: z.number().int().min(0).optional().describe("Position inside the column (0 = top)."),
   },
   (a) => vh("/cards.php", { method: "POST", body: { action: "move", card_id: a.card_id, board_column_id: a.board_column_id, position: a.position } })
+);
+
+tool(server, "viralhunt_assign_card",
+  "Hand a card to a member (id, name as the Team page shows it, or email); null unassigns. The member is notified. The answer carries the card with assigned_to_user_id and assigned_to_name read back.",
+  { card_id: z.number().int(), assigned_to: z.union([z.number().int(), z.string()]).nullable().describe("Member id, name or email; null to unassign.") },
+  (a) => vh("/cards.php", { method: "POST", body: { action: "assign", card_id: a.card_id, assigned_to: a.assigned_to } })
+);
+
+tool(server, "viralhunt_get_card",
+  "One card of the Editorial Board: title, column (name, is_done), status, assignee (id and name), priority, due date, notes, archived.",
+  { card_id: z.number().int() },
+  (a) => vh("/cards.php", { query: { card_id: a.card_id } })
+);
+
+tool(server, "viralhunt_list_cards",
+  "The organization's cards, newest first (up to 200): filter by column, status, assignee (id, name or email), unassigned or archived.",
+  {
+    board_column_id: z.number().int().optional(), status: z.enum(["pending", "in_progress", "completed"]).optional(),
+    assigned_to: z.union([z.number().int(), z.string()]).optional(), unassigned: z.boolean().optional(), archived: z.boolean().optional(), limit: z.number().int().optional(),
+  },
+  (a) => vh("/cards.php", { query: { action: "list", board_column_id: a.board_column_id, status: a.status, assigned_to: a.assigned_to, unassigned: a.unassigned ? 1 : undefined, archived: a.archived ? 1 : undefined, limit: a.limit } })
+);
+
+tool(server, "viralhunt_archive_card",
+  "Take a card off the board (archive). Nothing is deleted: a person restores it from the board's Archived view.",
+  { card_id: z.number().int() },
+  (a) => vh("/cards.php", { method: "POST", body: { action: "archive", card_id: a.card_id } })
 );
 
 tool(server, "viralhunt_my_cards",
