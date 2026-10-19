@@ -573,9 +573,21 @@ tool(server, "viralhunt_assign_template",
 
 // ── Cancel a scheduled post ──
 tool(server, "viralhunt_cancel_post",
-  "Cancel the not-yet-published targets of a scheduled post. If everything already published you'll get a 409 — delete it from the platform instead.",
-  { id: z.number().int().describe("The post id.") },
-  (a) => vh("/schedule.php", { method: "POST", query: { action: "cancel" }, body: { id: a.id } })
+  "Cancel the not-yet-published targets of a scheduled post, or with account_id stop ONE network (a pending retry, a timed-out create, a not-yet-published PostProxy post). A published target answers 409: use viralhunt_delete_post.",
+  { id: z.number().int().describe("The post id."), account_id: z.number().int().optional().describe("One connected account to stop; omit for the whole post.") },
+  (a) => vh("/schedule.php", { method: "POST", query: { action: "cancel" }, body: { id: a.id, account_id: a.account_id } })
+);
+
+tool(server, "viralhunt_list_posts",
+  "What went out and what did not: posts of the project (or the organization with all) by status, newest first, each target with status, PostProxy id, permalink, error, will_retry, timed_out (may be live), reconciled.",
+  { status: z.string().optional().describe("csv of draft, review, scheduled, processing, published, partial, failed, canceled; default published,partial,failed,processing,scheduled"), all: z.boolean().optional(), since: z.string().optional(), account_id: z.number().int().optional(), limit: z.number().int().optional(), offset: z.number().int().optional(), project_id: z.number().int().optional() },
+  (a) => vh("/schedule.php", { query: { action: "list", status: a.status, all: a.all ? 1 : undefined, since: a.since, account_id: a.account_id, limit: a.limit, offset: a.offset, project_id: a.project_id } })
+);
+
+tool(server, "viralhunt_delete_post",
+  "Owner or admin: take a PUBLISHED target down from its network through PostProxy (the cleanup of a duplicate). Confirm on the network afterwards. Without account_id every published target of the post goes.",
+  { id: z.number().int(), account_id: z.number().int().optional() },
+  (a) => vh("/schedule.php", { method: "POST", query: { action: "delete" }, body: { id: a.id, account_id: a.account_id } })
 );
 
 // ── When to post ──

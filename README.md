@@ -58,6 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.24 (2026-10-19)** — `viralhunt_list_posts` (the queue and the history per target), `viralhunt_delete_post` (take a published target down), `account_id` on `viralhunt_cancel_post`; `retry` on a timed-out create needs `force`.
 - **1.1.23 (2026-10-18)** — cards: `assigned_to` by id, name or email on `viralhunt_create_card`; `viralhunt_assign_card`, `viralhunt_get_card`, `viralhunt_list_cards`, `viralhunt_archive_card`. Drafts rows carry `publishes[]` (the text each account really sends).
 - **1.1.22 (2026-10-15)** — `viralhunt_brand_keywords` takes `run: true` ("search now"); `viralhunt_brand_status` carries `machine` (is the always-on machine alive).
 - **1.1.21 (2026-10-15)** — Brand watch: `viralhunt_brand_status`, `viralhunt_brand_keywords`, `viralhunt_brand_hot` (the discussions heating up right now, with links), `viralhunt_brand_alerts`, `viralhunt_brand_webhook` (signed deliveries to the brand's own agent).
