@@ -24,7 +24,7 @@ much to trust it:
 | `viralhunt_trending_sounds` | **Which sound** — trending audio on TikTok, Instagram Reels and Douyin, cross-network sounds first, with the posts that used it |
 | `viralhunt_best_communities` | **Where to post** — best subreddits (peak per 1,000 members, timing, top posts, similar) and Bluesky custom feeds for a topic |
 | `viralhunt_targets` | List your **brands/projects** and the connected accounts you can post to, with `needs_reconnect`, per-network `media_limits` and the projects linked in another language |
-| `viralhunt_schedule` | **Publish now, schedule, or leave a draft** (text + media, per-network copy, a first comment, or a `design` on a template the app renders when a person approves) |
+| `viralhunt_schedule` | **Publish now, schedule, or leave a draft** (text + media, per-network copy, a first comment, or a `design` on a template the app renders when a person approves). The answer carries `url`, `drafts_url`, `project_name`: a post for a person goes to Drafts complete and is handed over in one five-line message (id and project, `url`, angle, verification, the decision needed), the rest in `author_notes` |
 | `viralhunt_drafts` | **The drafts waiting** for a review and an approval, with their reviews |
 | `viralhunt_review_draft` | **Review a draft** — verdict, score, per-network warnings, a note (an agent as the team's checker) |
 | `viralhunt_policy` | **The content rule** a reviewer applies before any OK: block and fix lists with codes, six scores and thresholds, per-network notes (read it first, every pass) |
@@ -58,6 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.25 (2026-10-19)** — the working agreement in `viralhunt_schedule`: a post for a person goes to Drafts complete, never to Review unless asked, handed over in one five-line message with the `url` the answer gives; `url`, `drafts_url`, `project_id`, `project_name` on create, drafts rows and get.
 - **1.1.24 (2026-10-19)** — `viralhunt_list_posts` (the queue and the history per target), `viralhunt_delete_post` (take a published target down), `account_id` on `viralhunt_cancel_post`; `retry` on a timed-out create needs `force`.
 - **1.1.23 (2026-10-18)** — cards: `assigned_to` by id, name or email on `viralhunt_create_card`; `viralhunt_assign_card`, `viralhunt_get_card`, `viralhunt_list_cards`, `viralhunt_archive_card`. Drafts rows carry `publishes[]` (the text each account really sends).
 - **1.1.22 (2026-10-15)** — `viralhunt_brand_keywords` takes `run: true` ("search now"); `viralhunt_brand_status` carries `machine` (is the always-on machine alive).
