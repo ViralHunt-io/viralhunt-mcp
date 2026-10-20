@@ -153,7 +153,7 @@ tool(server, "viralhunt_schedule",
     "Everything else goes in author_notes. The Drafts page shows one project at a time (name the project); media_removed after a week is retention.",
     "A picture made on a template is complete only with its design in the post (pass the PNG in media AND design): a PNG alone is a flat file nobody",
     "can edit in the app; the answer says picture_editable: false and viralhunt_update_post with design repairs it. Every picture is made on one",
-    "of the organization's templates; when none fits, CREATE one (viralhunt_create_template, the owner's 'Creates templates' tick) and use it.",
+    "of the organization's templates; when none fits, CREATE one (viralhunt_upsert_template, the owner's 'Creates templates' tick) and use it.",
   ].join(" "),
   {
     project: z.string().optional().describe("Project name — REQUIRED if the org has more than one project."),
