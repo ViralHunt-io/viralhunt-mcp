@@ -151,6 +151,8 @@ tool(server, "viralhunt_schedule",
     "picture with rights = the organization's template with text only), never to Review unless asked. Hand it over in one five-line message:",
     "id and project_name, the url the answer gives (never compose a link), the angle, what you verified and the source, the decision you need.",
     "Everything else goes in author_notes. The Drafts page shows one project at a time (name the project); media_removed after a week is retention.",
+    "A picture made on a template is complete only with its design in the post (pass the PNG in media AND design): a PNG alone is a flat file nobody",
+    "can edit in the app; the answer says picture_editable: false and viralhunt_update_post with design repairs it.",
   ].join(" "),
   {
     project: z.string().optional().describe("Project name — REQUIRED if the org has more than one project."),
