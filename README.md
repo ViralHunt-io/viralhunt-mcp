@@ -58,6 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.26 (2026-10-20)** — the brand's `voice` on every project of `viralhunt_targets` (the owner's playbook: read first, follow over the general rules, offer to draft one when empty); complete means every network's copy (X, Bluesky, Threads) in `overrides` in the same create, never a cut.
 - **1.1.25 (2026-10-19)** — every picture on one of the organization's templates (create the template when none fits; pass the PNG and the `design`, a PNG alone is a flat file nobody can edit); the working agreement in `viralhunt_schedule`: a post for a person goes to Drafts complete, never to Review unless asked, handed over in one five-line message with the `url` the answer gives; `url`, `drafts_url`, `project_id`, `project_name` on create, drafts rows and get.
 - **1.1.24 (2026-10-19)** — `viralhunt_list_posts` (the queue and the history per target), `viralhunt_delete_post` (take a published target down), `account_id` on `viralhunt_cancel_post`; `retry` on a timed-out create needs `force`.
 - **1.1.23 (2026-10-18)** — cards: `assigned_to` by id, name or email on `viralhunt_create_card`; `viralhunt_assign_card`, `viralhunt_get_card`, `viralhunt_list_cards`, `viralhunt_archive_card`. Drafts rows carry `publishes[]` (the text each account really sends).
