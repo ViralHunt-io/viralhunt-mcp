@@ -163,7 +163,8 @@ tool(server, "viralhunt_schedule",
     project: z.string().optional().describe("Project name — REQUIRED if the org has more than one project."),
     project_id: z.number().int().optional().describe("Project id — alternative to project name."),
     body: z.string().optional().describe("Caption/text. Optional if media or design is provided."),
-    media: z.array(z.string()).optional().describe("Public image/video URLs. Check media_limits (viralhunt_targets) before a big video."),
+    media: z.array(z.string()).optional().describe("Public image/video URLs. ONE picture per post (a post made on a template has exactly one, its render). Check media_limits (viralhunt_targets) before a big video."),
+    carousel: z.boolean().optional().describe("Only when the user asked for a carousel: allows several pictures in media. Without it a second picture answers 422 multiple_pictures."),
     networks: z.array(z.string()).optional().describe('Post to every account on these networks, e.g. ["instagram","facebook"].'),
     target_account_ids: z.array(z.number().int()).optional().describe("Exact account ids (from viralhunt_targets). Omit = all accounts in the project."),
     scheduled_at: z.string().optional().describe("ISO-8601 UTC, e.g. 2026-08-01T15:30:00Z. Omit = publish now (or, with draft, the tentative time is 'when approved')."),
@@ -180,7 +181,7 @@ tool(server, "viralhunt_schedule",
   (a) => vh("/schedule.php", { method: "POST", query: { action: "create" }, body: {
     project: a.project, project_id: a.project_id, body: a.body, media: a.media,
     networks: a.networks, target_account_ids: a.target_account_ids, scheduled_at: a.scheduled_at, first_comment: a.first_comment, author_notes: a.author_notes, kind: a.kind,
-    draft: a.draft ? true : undefined, stage: a.stage, assigned_to: a.assigned_to, overrides: a.overrides, card_id: a.card_id, design: a.design,
+    draft: a.draft ? true : undefined, stage: a.stage, assigned_to: a.assigned_to, overrides: a.overrides, card_id: a.card_id, design: a.design, carousel: a.carousel,
   } })
 );
 
