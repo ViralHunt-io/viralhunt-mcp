@@ -343,13 +343,14 @@ tool(server, "viralhunt_update_post",
     kind: z.enum(["fact", "meme", "quote", "opinion", "promo"]).optional().describe("Drafts: what the post is."),
     overrides: z.object({}).passthrough().optional().describe("Drafts: per network or per account id: body, media, first_comment, thread."),
     design: z.object({}).passthrough().optional().describe("The filled template of this post (see viralhunt_schedule): send it to repair a post that went out with a PNG only, so its image becomes editable."),
-    png: z.string().optional().describe("Drafts: data:image/png;base64,… of the rendered design; stored and made the post's first picture."),
+    png: z.string().optional().describe("Drafts: data:image/png;base64,… of the rendered design; stored as the post's ONE picture (it replaces any picture the post had)."),
+    carousel: z.boolean().optional().describe("Only when the user asked for a carousel: allows several pictures in media. Without it a second picture answers 422 multiple_pictures. A post made on a template always has ONE picture, its render."),
     design_fields: z.object({}).passthrough().optional().describe("Drafts made on a template: {variable key: corrected text} for the texts inside the image (text variables only, never caption). Send the new png with it when you can render."),
     assigned_to: z.number().int().nullable().optional().describe("Drafts and posts in review: the member who takes it over (a user id from viralhunt_members; agents count); null unassigns. Their board card, their notification. A trusted reviewer may assign on someone else's post. The answer carries the stage read back after the edit."),
   },
   (a) => vh("/schedule.php", { method: "POST", query: { action: "update" }, body: {
     id: a.id, body: a.body, media: a.media, networks: a.networks, target_account_ids: a.target_account_ids, scheduled_at: a.scheduled_at,
-    first_comment: a.first_comment, author_notes: a.author_notes, kind: a.kind, overrides: a.overrides, design: a.design, png: a.png,
+    first_comment: a.first_comment, author_notes: a.author_notes, kind: a.kind, overrides: a.overrides, design: a.design, png: a.png, carousel: a.carousel,
     design_fields: a.design_fields, assigned_to: a.assigned_to,
   } })
 );
