@@ -471,15 +471,17 @@ tool(server, "viralhunt_brand_keywords",
     : vh("/brand.php", { query: { action: "keywords", project_id: a.project_id } })
 );
 tool(server, "viralhunt_brand_hot",
-  "The discussions about a brand heating up RIGHT NOW: posts of the last window that mention one of its keywords and whose comments grew by delta in the last hours (or were born loud), each with title, url, author, comments_from/to, delta, hours, alerted_at. The answer to 'where should I comment today': hand the user the biggest deltas with their links and a proposed comment. Never post the comment yourself.",
+  "The discussions about a brand heating up RIGHT NOW: posts of the last window that mention one of its keywords and whose comments grew by delta in the last hours (or were born loud), each with title, url, author, comments, comments_from/to, delta, hours, rising, alerted_at. The answer to 'where should I comment today': hand the user the biggest deltas with their links and a proposed comment. all=true adds what is most commented even when not climbing (rising false, delta null = one reading), rising first: the app's dashboard list. When it comes back empty read machine in the answer: extension_alive false = no Chrome with the poll on reported in 15 minutes, only Reddit is searched, tell the owner. Never post the comment yourself.",
   {
     project_id: z.number().int(),
     hours: z.number().int().optional().describe("The span the comments grew in (default 8)."),
     window: z.number().int().optional().describe("How far back a post may be, in hours (default 24)."),
     min_delta: z.number().int().optional().describe("Minimum comments gained (default 10)."),
     networks: z.array(z.string()).optional().describe("reddit, quora, x, instagram, tiktok, bluesky (default: all)."),
+    all: z.boolean().optional().describe("true = every matching post of the window, rising first then most commented (default: only the rising ones)."),
+    limit: z.number().int().optional().describe("With all: how many rows (default 40, up to 100)."),
   },
-  (a) => vh("/brand.php", { query: { action: "hot", project_id: a.project_id, hours: a.hours, window: a.window, min_delta: a.min_delta, networks: a.networks ? a.networks.join(",") : undefined } })
+  (a) => vh("/brand.php", { query: { action: "hot", project_id: a.project_id, hours: a.hours, window: a.window, min_delta: a.min_delta, networks: a.networks ? a.networks.join(",") : undefined, all: a.all ? 1 : undefined, limit: a.limit } })
 );
 tool(server, "viralhunt_brand_alerts",
   "What a brand was alerted about (each thread once), newest first; or, with mark_read_ids, mark alerts as taken so unread=true shows only what is left. Poll with since = your last read every 10 to 30 minutes, or set a webhook with viralhunt_brand_webhook.",

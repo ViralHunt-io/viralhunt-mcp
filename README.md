@@ -58,6 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.28 (2026-10-23)** — `all` and `limit` on `viralhunt_brand_hot` (the most commented threads too, rising first: the app's dashboard list); the answer carries `machine` (the always-on Chrome's heartbeat), so an empty list is read against whether anybody is searching.
 - **1.1.27 (2026-10-22)** — `carousel` on `viralhunt_create_post` / `viralhunt_update_post`: several pictures are allowed only when the user asked for a carousel (else `422 multiple_pictures`); `png` replaces the post's picture instead of being added next to it; a post made on a template always has ONE picture, its render.
 - **1.1.26 (2026-10-20)** — the brand's `voice` on every project of `viralhunt_targets` (the owner's playbook: read first, follow over the general rules, offer to draft one when empty); complete means every network's copy (X, Bluesky, Threads) in `overrides` in the same create, never a cut.
 - **1.1.25 (2026-10-19)** — every picture on one of the organization's templates (create the template when none fits; pass the PNG and the `design`, a PNG alone is a flat file nobody can edit); the working agreement in `viralhunt_schedule`: a post for a person goes to Drafts complete, never to Review unless asked, handed over in one five-line message with the `url` the answer gives; `url`, `drafts_url`, `project_id`, `project_name` on create, drafts rows and get.
