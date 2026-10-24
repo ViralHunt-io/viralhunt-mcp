@@ -177,11 +177,13 @@ tool(server, "viralhunt_schedule",
     assigned_to: z.number().int().optional().describe("The member who takes this post over (an id from viralhunt_members; agents count): its board card is assigned to them and they get the notification. Also on viralhunt_update_post."),
     card_id: z.number().int().optional().describe("The Editorial Board card this post comes from (optional)."),
     design: z.object({}).passthrough().optional().describe('ALWAYS when the picture was made from a ViralHunt template, even if you also rendered and uploaded the PNG (a PNG alone cannot be edited in the app; the design opens the editor on that template): {"template": "<slug or id>", "format": "feed", "variables": {"text": "…", "highlight": "…", "image": "https://…", "caption": "…"}}. Needs draft=true when media is empty; the app renders it when a person approves.'),
+    allow_duplicate: z.boolean().optional().describe("Only when the user wants a second copy on purpose: the duplicate firewall otherwise refuses an account another post of the last 72 hours already carries the same text for (409 duplicate_post when every account is one). An answer with status processing and checking=true means every network was cut and PostProxy is being checked for up to six minutes: never create the post again, read it back with viralhunt_get_post."),
   },
   (a) => vh("/schedule.php", { method: "POST", query: { action: "create" }, body: {
     project: a.project, project_id: a.project_id, body: a.body, media: a.media,
     networks: a.networks, target_account_ids: a.target_account_ids, scheduled_at: a.scheduled_at, first_comment: a.first_comment, author_notes: a.author_notes, kind: a.kind,
     draft: a.draft ? true : undefined, stage: a.stage, assigned_to: a.assigned_to, overrides: a.overrides, card_id: a.card_id, design: a.design, carousel: a.carousel,
+    allow_duplicate: a.allow_duplicate,
   } })
 );
 
@@ -262,8 +264,9 @@ tool(server, "viralhunt_approve_draft",
   {
     id: z.number().int().describe("The draft id."),
     translations: z.array(z.object({ project_id: z.number().int(), lang: z.string().optional(), account_ids: z.array(z.number().int()).optional(), image: z.string().optional(), send_mode: z.enum(["draft", "send"]).optional() })).optional(),
+    allow_duplicate: z.boolean().optional().describe("Only when the user wants a second copy on purpose: the duplicate firewall otherwise refuses an account another post of the last 72 hours already carries the same text for (409 duplicate_post when every account is one). A status processing with checking=true means every network was cut and PostProxy is being checked: never approve or create the post again."),
   },
-  (a) => vh("/schedule.php", { method: "POST", query: { action: "approve" }, body: { id: a.id, translations: a.translations } })
+  (a) => vh("/schedule.php", { method: "POST", query: { action: "approve" }, body: { id: a.id, translations: a.translations, allow_duplicate: a.allow_duplicate } })
 );
 
 tool(server, "viralhunt_translate_post",

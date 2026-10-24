@@ -58,6 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.29 (2026-10-24)** — `allow_duplicate` on `viralhunt_schedule` and `viralhunt_approve_draft`: the duplicate firewall refuses an account another post of the last 72 hours already carries the same text for (`duplicate_of`; `409 duplicate_post` when every account is one). A send whose every network was cut answers `status: processing` with `checking: true`: never create it again.
 - **1.1.28 (2026-10-23)** — `all` and `limit` on `viralhunt_brand_hot` (the most commented threads too, rising first: the app's dashboard list); the answer carries `machine` (the always-on Chrome's heartbeat), so an empty list is read against whether anybody is searching.
 - **1.1.27 (2026-10-22)** — `carousel` on `viralhunt_create_post` / `viralhunt_update_post`: several pictures are allowed only when the user asked for a carousel (else `422 multiple_pictures`); `png` replaces the post's picture instead of being added next to it; a post made on a template always has ONE picture, its render.
 - **1.1.26 (2026-10-20)** — the brand's `voice` on every project of `viralhunt_targets` (the owner's playbook: read first, follow over the general rules, offer to draft one when empty); complete means every network's copy (X, Bluesky, Threads) in `overrides` in the same create, never a cut.

@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "name": "io.github.rodvan/viralhunt-mcp",
-  "description": "Trending content on 12 networks, best time, hashtags, templates, drafts and review, publish to 11.",
+  "description": "Trending content on 13 networks, best time, hashtags, templates, drafts and review, publish to 11.",
   "repository": {
     "url": "https://github.com/viralhunt-io/viralhunt-mcp",
     "source": "github"
   },
-  "version": "1.1.28",
+  "version": "1.1.29",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "viralhunt-mcp",
-      "version": "1.1.28",
+      "version": "1.1.29",
       "transport": {
         "type": "stdio"
       },
