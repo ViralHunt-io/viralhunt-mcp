@@ -504,14 +504,18 @@ tool(server, "viralhunt_brand_alerts",
     : vh("/brand.php", { query: { action: "alerts", project_id: a.project_id, since: a.since, unread: a.unread ? 1 : undefined, limit: a.limit } })
 );
 tool(server, "viralhunt_brand_webhook",
-  "Read, set or clear the webhook where a brand's alerts are POSTed the minute the cron writes them (owner/admin to change it): JSON body {event: brand.alerts, project, alerts[], radar_url}, header X-VH-Signature = sha256=<hex HMAC-SHA256 of the raw body with the secret returned here>. Answer 2xx within 8 s; no retry (alerts stay readable). url null clears it.",
+  "Read, set, test or clear the webhook where a brand's alerts are POSTed the minute the cron writes them (owner/admin to change it). format json: body {event: brand.alerts, project, alerts[], radar_url}, header X-VH-Signature = sha256=<hex HMAC-SHA256 of the raw body with the secret returned here>; format discord or slack: a message for that channel's incoming webhook. Answer 2xx within 8 s; no retry (alerts stay readable). url null clears it. Guide: https://viralhunt.io/webhooks",
   {
     project_id: z.number().int(),
     url: z.string().nullable().optional().describe("https URL on a public host to set; null to clear; omit to read."),
+    format: z.enum(["auto", "json", "discord", "slack"]).optional().describe("What arrives: json = our signed body (an agent, n8n, Make, Zapier, a server); discord or slack = a message for that channel's incoming webhook (no code in between); auto (default) reads a Discord or Slack URL by itself. Only with url."),
+    test: z.boolean().optional().describe("true = send ONE sample alert to the saved webhook now (action webhook_test) and report what the receiver answered (ok, code, hint). Run it right after setting a webhook."),
   },
-  (a) => a.url !== undefined
-    ? vh("/brand.php", { method: "POST", body: { action: "webhook", project_id: a.project_id, url: a.url } })
-    : vh("/brand.php", { query: { action: "webhook", project_id: a.project_id } })
+  (a) => a.test
+    ? vh("/brand.php", { method: "POST", body: { action: "webhook_test", project_id: a.project_id } })
+    : a.url !== undefined
+      ? vh("/brand.php", { method: "POST", body: { action: "webhook", project_id: a.project_id, url: a.url, format: a.format } })
+      : vh("/brand.php", { query: { action: "webhook", project_id: a.project_id } })
 );
 
 // ── Content templates: browse the library ──
