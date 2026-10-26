@@ -58,6 +58,7 @@ network's media ceilings, and is told not to repost fake news / copyrighted medi
 
 ## Changelog
 
+- **1.1.30 (2026-10-26)** — `viralhunt_update_post` on a SCHEDULED post works per account: each account's own text and pictures are patched only when they changed, a changed `thread` (new parameter) on X/Threads makes that network's post again, added accounts are created and dropped ones deleted; the answer lists `patched`, `recreated`, `added`, `removed`, `refused`; nothing under 6 minutes before the post's time (`409 not_editable`).
 - **1.1.29 (2026-10-24)** — `allow_duplicate` on `viralhunt_schedule` and `viralhunt_approve_draft`: the duplicate firewall refuses an account another post of the last 72 hours already carries the same text for (`duplicate_of`; `409 duplicate_post` when every account is one). A send whose every network was cut answers `status: processing` with `checking: true`: never create it again.
 - **1.1.28 (2026-10-23)** — `all` and `limit` on `viralhunt_brand_hot` (the most commented threads too, rising first: the app's dashboard list); the answer carries `machine` (the always-on Chrome's heartbeat), so an empty list is read against whether anybody is searching.
 - **1.1.27 (2026-10-22)** — `carousel` on `viralhunt_create_post` / `viralhunt_update_post`: several pictures are allowed only when the user asked for a carousel (else `422 multiple_pictures`); `png` replaces the post's picture instead of being added next to it; a post made on a template always has ONE picture, its render.
